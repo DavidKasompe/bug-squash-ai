@@ -26,9 +26,12 @@ const Header = () => {
         </nav>
         
         <div className="flex items-center gap-4">
-          <button className="px-4 py-2 rounded-md border border-border bg-secondary/50 text-foreground hover:bg-secondary/80 transition-colors">
+          <Link to="/signin" className="px-4 py-2 rounded-md border border-border bg-secondary/50 text-foreground hover:bg-secondary/80 transition-colors">
             Sign In
-          </button>
+          </Link>
+          <Link to="/signup" className="hidden md:block px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+            Sign Up
+          </Link>
         </div>
       </div>
     </header>
