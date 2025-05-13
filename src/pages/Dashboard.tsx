@@ -11,6 +11,7 @@ import Footer from '@/components/layout/Footer';
 import { BugReport } from '@/types/bugs';
 import BugConfirmModal from '@/components/dashboard/BugConfirmModal';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from 'react-router-dom';
 
 // Mock fetch function to simulate API call to Django backend
 const fetchBugReports = async (): Promise<BugReport[]> => {
@@ -168,13 +169,22 @@ const Dashboard = () => {
                       </CollapsibleContent>
                     </CardContent>
 
-                    <CardFooter className="pt-0">
+                    <CardFooter className="pt-0 flex flex-col md:flex-row gap-2">
                       <Button 
                         onClick={() => handleApplyFix(bug)} 
-                        className="w-full hover:glow-effect"
+                        className="w-full md:flex-1 hover:glow-effect"
                         aria-label={`Apply fix for ${bug.summary}`}
                       >
                         Apply Fix
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full md:flex-1"
+                        asChild
+                      >
+                        <Link to={`/code-patch/${bug.id}`} aria-label={`View code patch for ${bug.summary}`}>
+                          View Diff
+                        </Link>
                       </Button>
                     </CardFooter>
                   </Card>

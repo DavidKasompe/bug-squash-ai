@@ -8,3 +8,11 @@ export interface BugReport {
   confidenceScore: number;
   severity: 'low' | 'medium' | 'high';
 }
+
+export interface CodePatch {
+  id: string;
+  bugId: string;
+  filename: string;
+  original: string;
+  suggested: string;
+}
