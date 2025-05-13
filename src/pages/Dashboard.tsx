@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Bug, Circle, Circle2, Loader } from 'lucide-react';
@@ -160,7 +159,7 @@ const Dashboard = () => {
                     <CardContent className="pb-3 pt-0">
                       <CollapsibleTrigger className="flex items-center gap-2 text-sm text-primary hover:text-primary/90 transition-colors w-full justify-start pt-2" aria-label="Show suggested fix">
                         <span>Suggested Fix</span>
-                        <Circle2 className="h-3 w-3" />
+                        <Circle className="h-3 w-3" />
                       </CollapsibleTrigger>
                       <CollapsibleContent className="animate-accordion-down mt-2">
                         <pre className="code-block whitespace-pre-wrap text-xs">
