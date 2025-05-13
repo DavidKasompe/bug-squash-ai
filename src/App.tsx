@@ -11,6 +11,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import CodePatchPreview from "./pages/CodePatchPreview";
+import ValidationResults from "./pages/ValidationResults";
 
 const App = () => {
   // Move QueryClient initialization inside the component
@@ -29,6 +30,7 @@ const App = () => {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/code-patch/:bugId?" element={<CodePatchPreview />} />
+            <Route path="/validation" element={<ValidationResults />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
