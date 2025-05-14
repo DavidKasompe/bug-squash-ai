@@ -12,6 +12,7 @@ import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import CodePatchPreview from "./pages/CodePatchPreview";
 import ValidationResults from "./pages/ValidationResults";
+import ConnectGitHub from "./pages/ConnectGitHub";
 
 const App = () => {
   // Move QueryClient initialization inside the component
@@ -31,6 +32,7 @@ const App = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/code-patch/:bugId?" element={<CodePatchPreview />} />
             <Route path="/validation" element={<ValidationResults />} />
+            <Route path="/connect-github" element={<ConnectGitHub />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

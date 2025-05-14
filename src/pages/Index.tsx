@@ -31,9 +31,11 @@ const Index = () => {
                     Upload Logs
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="font-medium animated-border">
-                  Learn More
-                </Button>
+                <Link to="/connect-github">
+                  <Button size="lg" variant="outline" className="font-medium animated-border">
+                    Connect GitHub
+                  </Button>
+                </Link>
               </div>
             </div>
 
@@ -154,13 +156,20 @@ const Index = () => {
               <div className="text-center">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to squash those bugs?</h2>
                 <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                  Upload your logs now and get AI-powered bug analysis and fixes within seconds.
+                  Upload your logs or connect your GitHub repository to get AI-powered bug analysis and fixes within seconds.
                 </p>
-                <Link to="/upload">
-                  <Button size="lg" className="bg-accent hover:bg-accent/90 font-medium px-8 glow-effect">
-                    Get Started
-                  </Button>
-                </Link>
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <Link to="/upload">
+                    <Button size="lg" className="bg-accent hover:bg-accent/90 font-medium px-8 glow-effect">
+                      Upload Logs
+                    </Button>
+                  </Link>
+                  <Link to="/connect-github">
+                    <Button size="lg" variant="outline" className="font-medium animated-border">
+                      Connect GitHub
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
