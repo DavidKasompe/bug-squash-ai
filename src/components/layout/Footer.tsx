@@ -1,26 +1,38 @@
-
-import React from 'react';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Github, BookOpen, Shield } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="border-t border-border/40 py-6 bg-background">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-xs font-bold text-primary">B</span>
-            </div>
-            <span className="text-sm font-medium">BugSquash.AI</span>
-          </div>
-          
-          <div className="text-xs text-muted-foreground">
-            Automatically detect, analyze, and fix code bugs with AI
-          </div>
-          
-          <div className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} BugSquash.AI. All rights reserved.
-          </div>
-        </div>
+    <footer className="border-t border-border/40 bg-background/95 py-6 px-4 md:px-0">
+      <div className="container mx-auto flex flex-col md:flex-row items-center justify-center gap-4">
+        <nav className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
+          <a
+            href="/docs"
+            className="hover:text-primary flex items-center gap-1"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <BookOpen className="w-4 h-4" /> Docs
+          </a>
+          <a
+            href="https://github.com/your-org/bugsquash"
+            className="hover:text-primary flex items-center gap-1"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Github className="w-4 h-4" /> GitHub
+          </a>
+          <a
+            href="/privacy"
+            className="hover:text-primary flex items-center gap-1"
+          >
+            <Shield className="w-4 h-4" /> Privacy Policy
+          </a>
+        </nav>
+      </div>
+      <div className="container mx-auto mt-4 text-center text-xs text-muted-foreground">
+        &copy; {new Date().getFullYear()} BugSquash.AI. All rights reserved.
       </div>
     </footer>
   );

@@ -21,7 +21,7 @@ const ConnectGitHub = () => {
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   
-  // Fetch GitHub connection status
+  
   const { 
     data: status = { connected: false },
     isLoading: isStatusLoading,
@@ -31,7 +31,7 @@ const ConnectGitHub = () => {
     queryFn: GitHubService.getStatus,
   });
   
-  // Fetch repositories when connected
+  
   const { 
     data: repositories = [], 
     isLoading: isReposLoading,
@@ -42,7 +42,7 @@ const ConnectGitHub = () => {
     enabled: status.connected,
   });
   
-  // Fetch branches when a repository is selected
+  
   const { 
     data: branches = [],
     isLoading: isBranchesLoading,
@@ -53,12 +53,12 @@ const ConnectGitHub = () => {
     enabled: !!selectedRepo,
   });
   
-  // Reset selected branch when repository changes
+  
   useEffect(() => {
     setSelectedBranch(null);
   }, [selectedRepo]);
   
-  // Default to the default branch when branches are loaded
+  
   useEffect(() => {
     if (branches.length > 0 && !selectedBranch) {
       const defaultBranch = branches.find(b => b.name === 'main') || branches[0];
@@ -89,7 +89,7 @@ const ConnectGitHub = () => {
       );
       
       if (success) {
-        // Navigate to dashboard after successful analysis
+        
         setTimeout(() => navigate('/dashboard'), 1000);
       }
     } finally {

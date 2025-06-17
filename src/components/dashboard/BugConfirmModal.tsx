@@ -13,10 +13,10 @@ interface BugConfirmModalProps {
 
 const BugConfirmModal = ({ isOpen, onClose, bug }: BugConfirmModalProps) => {
   const handleApply = () => {
-    // Here you would send the fix to your Django backend
+    
     console.log('Applying fix for bug:', bug?.id);
     
-    // Show success toast
+    
     toast({
       title: "Fix applied",
       description: `Successfully applied fix for "${bug?.summary}"`,

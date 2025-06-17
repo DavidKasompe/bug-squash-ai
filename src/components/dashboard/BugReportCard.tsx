@@ -16,9 +16,9 @@ interface BugReportCardProps {
 
 const BugReportCard = ({ bug, onApplyFix }: BugReportCardProps) => {
   const getConfidenceBadgeVariant = (score: number) => {
-    if (score >= 85) return 'default'; // Green for high
-    if (score >= 70) return 'secondary'; // Yellow for medium
-    return 'destructive'; // Red for low
+    if (score >= 85) return 'default'; 
+    if (score >= 70) return 'secondary'; 
+    return 'destructive'; 
   };
 
   const getConfidenceLabel = (score: number) => {

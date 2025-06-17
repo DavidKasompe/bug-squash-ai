@@ -69,20 +69,19 @@ const FileUpload = () => {
     }
     
     setIsUploading(true);
-    // Simulate analysis process
+    
     setTimeout(() => {
       setIsUploading(false);
       toast({
         title: "Analysis Complete",
         description: "Your logs have been analyzed successfully",
       });
-      // Here you would typically redirect to results or update state
+      
     }, 2000);
   };
   
   return (
     <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto">
-      {/* File drop zone */}
       <div
         className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center gap-4 transition-colors cursor-pointer min-h-[300px] ${
           isDragging 
@@ -127,7 +126,7 @@ const FileUpload = () => {
         </div>
       </div>
 
-      {/* Text area for direct input */}
+      
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <label className="text-sm font-medium">Or paste your logs directly:</label>
@@ -148,7 +147,7 @@ const FileUpload = () => {
         />
       </div>
 
-      {/* Analyze button */}
+      
       <button 
         className={`w-full py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 glow-effect ${
           isUploading 

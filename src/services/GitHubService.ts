@@ -26,12 +26,9 @@ export interface GitHubStatus {
 export const GitHubService = {
   async getStatus(): Promise<GitHubStatus> {
     try {
-      // Mock API call - replace with real API endpoint
-      // const response = await fetch('/api/github/status/');
-      // const data = await response.json();
-      // return data;
       
-      // Mock data for demo
+      
+      
       return { connected: false };
     } catch (error) {
       console.error("Error fetching GitHub status:", error);
@@ -46,13 +43,11 @@ export const GitHubService = {
 
   async connectToGitHub(): Promise<void> {
     try {
-      // In a real implementation, this would redirect to GitHub OAuth
-      // window.location.href = '/api/github/connect/';
       
-      // For demo purposes, we'll just log this action
+     
       console.log("Connecting to GitHub...");
       
-      // Mock a successful connection after a delay
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
@@ -71,12 +66,7 @@ export const GitHubService = {
 
   async getRepositories(): Promise<GitHubRepo[]> {
     try {
-      // Mock API call - replace with real API endpoint
-      // const response = await fetch('/api/github/repos/');
-      // const data = await response.json();
-      // return data;
       
-      // Mock data for demo
       return [
         {
           id: 1,
@@ -116,12 +106,7 @@ export const GitHubService = {
 
   async getBranches(repoName: string): Promise<GitHubBranch[]> {
     try {
-      // Mock API call - replace with real API endpoint
-      // const response = await fetch(`/api/github/repos/${repoName}/branches`);
-      // const data = await response.json();
-      // return data;
       
-      // Mock data for demo
       return [
         {
           name: "main",
@@ -153,18 +138,10 @@ export const GitHubService = {
     path: string = "/"
   ): Promise<boolean> {
     try {
-      // Mock API call - replace with real API endpoint
-      // const response = await fetch('/api/github/analyze/', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ repo: repoName, branch, path }),
-      // });
-      // const data = await response.json();
       
-      // Mock successful analysis
       console.log(`Analyzing ${repoName} (${branch}): ${path}`);
       
-      // Mock delay to simulate API call
+      
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast({

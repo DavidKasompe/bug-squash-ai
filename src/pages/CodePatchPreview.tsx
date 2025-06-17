@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
-// Mock data for the code patches
+
 const mockPatches = [
   {
     id: '1',
@@ -94,13 +94,13 @@ const CodePatchPreview = () => {
   const leftScrollRef = useRef<HTMLDivElement>(null);
   const rightScrollRef = useRef<HTMLDivElement>(null);
 
-  // Get the patch when the component mounts or when the selected patch changes
+  
   useEffect(() => {
     const patch = mockPatches.find(p => p.id === selectedPatchId) || mockPatches[0];
     setActivePatch(patch);
   }, [selectedPatchId]);
 
-  // Synchronize scrolling between the two panels
+  
   const handleScroll = (sourceRef: React.RefObject<HTMLDivElement>, targetRef: React.RefObject<HTMLDivElement>) => {
     if (sourceRef.current && targetRef.current) {
       targetRef.current.scrollTop = sourceRef.current.scrollTop;
@@ -108,13 +108,12 @@ const CodePatchPreview = () => {
     }
   };
 
-  // Parse and format code for diff view
+  
   const formatCodeForDiff = (original: string, suggested: string) => {
     const originalLines = original.split('\n');
     const suggestedLines = suggested.split('\n');
     
-    // Simple algorithm to identify added/removed lines (this is a simplification)
-    // In a real app, you'd use a proper diff algorithm
+    
     const result = {
       originalWithStatus: originalLines.map((line, idx) => ({
         line,
@@ -180,7 +179,7 @@ const CodePatchPreview = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-4 rounded-b-lg overflow-hidden">
-          {/* Original Code Panel */}
+          
           <Card className="border border-border overflow-hidden">
             <div className="bg-card px-4 py-2 border-b border-border sticky top-0 z-10">
               <h3 className="text-sm font-medium">Original Code</h3>
@@ -215,7 +214,7 @@ const CodePatchPreview = () => {
             </ScrollArea>
           </Card>
           
-          {/* Suggested Code Panel */}
+          
           <Card className="border border-border overflow-hidden">
             <div className="bg-card px-4 py-2 border-b border-border sticky top-0 z-10">
               <h3 className="text-sm font-medium">Suggested Fix</h3>

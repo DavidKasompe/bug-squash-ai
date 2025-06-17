@@ -1,12 +1,12 @@
 
 import { BugReport } from '@/types/bugs';
 
-// Mock fetch function to simulate API call to Django backend
+
 export const fetchBugReports = async (): Promise<BugReport[]> => {
-  // Simulate API delay
+  
   await new Promise(resolve => setTimeout(resolve, 1500));
   
-  // This would be an actual API call to your Django backend
+  
   return [
     {
       id: '1',

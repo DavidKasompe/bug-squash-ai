@@ -71,3 +71,9 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Backend (Django)
+
+A new `backend/` folder will be created at the project root. This will contain the Django backend for BugSquash.AI, including all Django apps, configuration, and API code.
+
+- To set up the backend, navigate to the `backend/` directory and follow the instructions in its README (to be created).

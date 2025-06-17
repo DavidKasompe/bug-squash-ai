@@ -1,0 +1,655 @@
+{
+	"info": {
+		"_postman_id": "YOUR_COLLECTION_ID",
+		"name": "BugSquash.AI API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"description": "Postman collection for the BugSquash.AI Django backend API."
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    "username": "testuser",\n    "email": "test@example.com",\n    "password": "password123",\n    "password_confirm": "password123"\n}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/auth/register/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"auth",
+								"register",
+								""
+							]
+						},
+						"description": "Register a new user."
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    "username": "testuser",\n    "password": "password123"\n}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/auth/login/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"auth",
+								"login",
+								""
+							]
+						},
+						"description": "Login a user to get access and refresh tokens."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    "refresh": "YOUR_REFRESH_TOKEN_HERE"\n}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/auth/token/refresh/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"auth",
+								"token",
+								"refresh",
+								""
+							]
+						},
+						"description": "Refresh an access token using a refresh token."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/auth/verify-email/:uidb64/:token/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"auth",
+								"verify-email",
+								":uidb64",
+								":token",
+								""
+							],
+							"variable": [
+								{
+									"key": "uidb64",
+									"value": "ENTER_UIDB64_HERE"
+								},
+								{
+									"key": "token",
+									"value": "ENTER_TOKEN_HERE"
+								}
+							]
+						},
+						"description": "Verify user email (accessed via email link)."
+					},
+					"response": []
+				},
+                {
+                    "name": "Password Reset Request",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    "email": "user@example.com"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:8000/api/auth/password_reset/",
+                            "protocol": "http",
+                            "host": [
+                                "127",
+                                "0",
+                                "0",
+                                "1"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "auth",
+                                "password_reset",
+                                ""
+                            ]
+                        },
+                        "description": "Request a password reset email."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Password Reset Confirm",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    "new_password": "your_new_password",\n    "re_new_password": "your_new_password"\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:8000/api/auth/reset/:uidb64/:token/",
+                            "protocol": "http",
+                            "host": [
+                                "127",
+                                "0",
+                                "0",
+                                "1"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "auth",
+                                "reset",
+                                ":uidb64",
+                                ":token",
+                                ""
+                            ],
+                            "variable": [
+                                {
+                                    "key": "uidb64",
+                                    "value": "ENTER_UIDB64_HERE"
+                                },
+                                {
+                                    "key": "token",
+                                    "value": "ENTER_TOKEN_HERE"
+                                }
+                            ]
+                        },
+                        "description": "Confirm password reset with new password."
+                    },
+                    "response": []
+                }
+			]
+		},
+		{
+			"name": "Logs",
+			"item": [
+				{
+					"name": "List Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/logs/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"logs",
+								""
+							]
+						},
+						"description": "Retrieve a list of all logs."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Log",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer YOUR_ACCESS_TOKEN"
+                            }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    "log_level": "INFO",\n    "message": "This is a new log entry.",\n    "source": "frontend"\n}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/logs/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"logs",
+								""
+							]
+						},
+						"description": "Create a new log entry. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve Log",
+					"request": {
+						"method": "GET",
+						"header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer YOUR_ACCESS_TOKEN"
+                            }
+                        ],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/logs/:id/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"logs",
+								":id",
+								""
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "ENTER_LOG_ID_HERE"
+								}
+							]
+						},
+						"description": "Retrieve a specific log entry by ID. Requires authentication."
+					},
+					"response": []
+				},
+                {
+					"name": "Update Log",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer YOUR_ACCESS_TOKEN"
+                            }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    "message": "Updated log message.",\n    "log_level": "WARNING"\n}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/logs/:id/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"logs",
+								":id",
+								""
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "ENTER_LOG_ID_HERE"
+								}
+							]
+						},
+						"description": "Update a specific log entry by ID. Requires authentication."
+					},
+					"response": []
+				},
+                {
+					"name": "Delete Log",
+					"request": {
+						"method": "DELETE",
+						"header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer YOUR_ACCESS_TOKEN"
+                            }
+                        ],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/logs/:id/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"logs",
+								":id",
+								""
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "ENTER_LOG_ID_HERE"
+								}
+							]
+						},
+						"description": "Delete a specific log entry by ID. Requires authentication."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Bugs",
+			"item": [
+				{
+					"name": "List Bugs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/bugs/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"bugs",
+								""
+							]
+						},
+						"description": "Retrieve a list of all bugs."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Bug",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer YOUR_ACCESS_TOKEN"
+                            }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    "log": "ENTER_LOG_ID_UUID_HERE",\n    "title": "Example Bug Title",\n    "description": "Detailed description of the bug.\nLine 2 of description.",\n    "error_message": "Failed to connect to database",\n    "stack_trace": "Traceback (most recent call last):\n  File \"/app/main.py\", line 10, in <module>\n    raise ValueError(\"Database connection failed\")\nValueError: Database connection failed",\n    "file_path": "/app/src/database.py",\n    "line_number": 123\n}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/bugs/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"bugs",
+								""
+							]
+						},
+						"description": "Create a new bug entry. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve Bug",
+					"request": {
+						"method": "GET",
+						"header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer YOUR_ACCESS_TOKEN"
+                            }
+                        ],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/bugs/:id/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"bugs",
+								":id",
+								""
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "ENTER_BUG_ID_HERE"
+								}
+							]
+						},
+						"description": "Retrieve a specific bug entry by ID. Requires authentication."
+					},
+					"response": []
+				},
+                {
+					"name": "Update Bug",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer YOUR_ACCESS_TOKEN"
+                            }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    "status": "FIXED",\n    "severity": "HIGH"\n}"
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/bugs/:id/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"bugs",
+								":id",
+								""
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "ENTER_BUG_ID_HERE"
+								}
+							]
+						},
+						"description": "Update a specific bug entry by ID. Requires authentication."
+					},
+					"response": []
+				},
+                {
+					"name": "Delete Bug",
+					"request": {
+						"method": "DELETE",
+						"header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer YOUR_ACCESS_TOKEN"
+                            }
+                        ],
+						"url": {
+							"raw": "http://127.0.0.1:8000/api/bugs/:id/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"bugs",
+								":id",
+								""
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "ENTER_BUG_ID_HERE"
+								}
+							]
+						},
+						"description": "Delete a specific bug entry by ID. Requires authentication."
+					},
+					"response": []
+				},
+                {
+                    "name": "Analyze Bug",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer YOUR_ACCESS_TOKEN"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    "log_id": "ENTER_LOG_ID_UUID_HERE",\n    "error_message": "Failed to fetch data from API",\n    "stack_trace": "Error: Network Error at fetchUserData (api.js:20:10)",\n    "file_path": "src/utils/api.js",\n    "line_number": 20\n}"
+                        },
+                        "url": {
+                            "raw": "http://127.0.0.1:8000/api/bugs/analyze/",
+                            "protocol": "http",
+                            "host": [
+                                "127",
+                                "0",
+                                "0",
+                                "1"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "bugs",
+                                "analyze",
+                                ""
+                            ]
+                        },
+                        "description": "Request analysis for a bug based on log data. Requires authentication."
+                    },
+                    "response": []
+                }
+			]
+		}
+	],
+	"protocolProfileBehavior": {}
+} 

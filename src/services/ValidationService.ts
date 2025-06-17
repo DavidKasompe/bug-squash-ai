@@ -2,10 +2,10 @@
 import { ValidationResults } from '@/types/validation';
 
 export const fetchValidationResults = async (): Promise<ValidationResults> => {
-  // Simulate API delay
+ 
   await new Promise(resolve => setTimeout(resolve, 1500));
   
-  // Mock data for validation results
+  
   const testCases = [
     {
       id: '1',
