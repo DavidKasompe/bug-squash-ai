@@ -6,7 +6,7 @@ export interface BugReport {
   affectedFunction: string;
   suggestedFix: string;
   confidenceScore: number;
-  severity: 'low' | 'medium' | 'high';
+  severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
 export interface CodePatch {

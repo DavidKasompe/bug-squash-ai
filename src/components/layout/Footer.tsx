@@ -16,7 +16,7 @@ const Footer = () => {
             <BookOpen className="w-4 h-4" /> Docs
           </a>
           <a
-            href="https://github.com/your-org/bugsquash"
+            href="https://github.com/your-org/aizora"
             className="hover:text-primary flex items-center gap-1"
             target="_blank"
             rel="noopener noreferrer"
@@ -32,7 +32,7 @@ const Footer = () => {
         </nav>
       </div>
       <div className="container mx-auto mt-4 text-center text-xs text-muted-foreground">
-        &copy; {new Date().getFullYear()} BugSquash.AI. All rights reserved.
+        &copy; {new Date().getFullYear()} Aizora. All rights reserved.
       </div>
     </footer>
   );

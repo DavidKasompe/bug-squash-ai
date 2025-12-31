@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { authService } from "@/lib/auth";
+import { useUserStore } from "@/store/userStore";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -28,6 +29,8 @@ type SignInFormValues = z.infer<typeof formSchema>;
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
+  const { login: setUserLogin } = useUserStore();
+  const navigate = useNavigate();
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(formSchema),
@@ -39,16 +42,19 @@ const SignIn = () => {
 
   const onSubmit = async (data: SignInFormValues) => {
     try {
-      
       const response = await authService.login({
         username: data.email,
         password: data.password,
+      });
+      setUserLogin({
+        email: response.user.email,
+        username: response.user.username,
       });
       toast({
         title: "Login successful",
         description: `Welcome back, ${response.user.username}!`,
       });
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -68,7 +74,7 @@ const SignIn = () => {
   };
 
   return (
-    <AuthLayout title="Welcome back to BugSquash.AI">
+    <AuthLayout title="Welcome back to Aizora">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField

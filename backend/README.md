@@ -1,6 +1,6 @@
-# BugSquash.AI Backend
+# Aizora Backend
 
-This folder contains the Django backend for BugSquash.AI.
+This folder contains the Django backend for Aizora.
 
 ## Purpose
 

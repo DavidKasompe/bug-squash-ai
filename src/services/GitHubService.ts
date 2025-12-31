@@ -1,5 +1,6 @@
 
 import { toast } from "@/components/ui/use-toast";
+import api from "@/lib/api";
 
 export interface GitHubRepo {
   id: number;
@@ -8,6 +9,12 @@ export interface GitHubRepo {
   description: string | null;
   html_url: string;
   default_branch: string;
+  private?: boolean;
+  permissions?: {
+    admin: boolean;
+    push: boolean;
+    pull: boolean;
+  };
 }
 
 export interface GitHubBranch {
@@ -16,44 +23,59 @@ export interface GitHubBranch {
     sha: string;
     url: string;
   };
+  protected?: boolean;
+}
+
+export interface GitHubRepository {
+  id: string;
+  github_id: number;
+  name: string;
+  full_name: string;
+  description: string;
+  private: boolean;
+  default_branch: string;
+  status: 'active' | 'inactive' | 'syncing' | 'error';
+  auto_analyze: boolean;
+  analyze_branches: string[];
+  analyze_paths: string[];
+  last_synced_at?: string;
+  created_at: string;
 }
 
 export interface GitHubStatus {
   connected: boolean;
   username?: string;
+  repositories?: GitHubRepository[];
 }
 
 export const GitHubService = {
   async getStatus(): Promise<GitHubStatus> {
     try {
-      
-      
-      
-      return { connected: false };
+      const response = await api.get('/github/integration/status/');
+      return {
+        connected: response.data.connected,
+        username: response.data.username
+      };
     } catch (error) {
       console.error("Error fetching GitHub status:", error);
-      toast({
-        title: "Error",
-        description: "Failed to check GitHub connection status",
-        variant: "destructive",
-      });
       return { connected: false };
     }
   },
 
   async connectToGitHub(): Promise<void> {
     try {
-      
-     
-      console.log("Connecting to GitHub...");
-      
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Success",
-        description: "Connected to GitHub successfully",
-      });
+      // Initiate OAuth flow by redirecting to GitHub
+      const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+      const redirectUri = import.meta.env.VITE_GITHUB_REDIRECT_URI || window.location.origin + '/connect-github';
+
+      if (!clientId) {
+        throw new Error('GitHub Client ID not configured');
+      }
+
+      const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo,read:user&response_type=code`;
+
+      // Redirect to GitHub OAuth
+      window.location.href = githubAuthUrl;
     } catch (error) {
       console.error("Error connecting to GitHub:", error);
       toast({
@@ -64,35 +86,34 @@ export const GitHubService = {
     }
   },
 
+  async handleOAuthCallback(code: string, state?: string): Promise<void> {
+    try {
+      const response = await api.post('/github/integration/oauth-callback/', { 
+        code,
+        state: state || new URLSearchParams(window.location.search).get('state') 
+      });
+
+      toast({
+        title: "Success",
+        description: "Connected to GitHub successfully",
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error("Error handling OAuth callback:", error);
+      toast({
+        title: "Error",
+        description: "Failed to complete GitHub connection",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  },
+
   async getRepositories(): Promise<GitHubRepo[]> {
     try {
-      
-      return [
-        {
-          id: 1,
-          name: "example-repo-1",
-          full_name: "user/example-repo-1",
-          description: "An example repository",
-          html_url: "https://github.com/user/example-repo-1",
-          default_branch: "main",
-        },
-        {
-          id: 2,
-          name: "example-repo-2",
-          full_name: "user/example-repo-2",
-          description: "Another example repository",
-          html_url: "https://github.com/user/example-repo-2",
-          default_branch: "master",
-        },
-        {
-          id: 3,
-          name: "buggy-project",
-          full_name: "user/buggy-project",
-          description: "A project with some bugs to fix",
-          html_url: "https://github.com/user/buggy-project",
-          default_branch: "develop",
-        },
-      ];
+      const response = await api.get('/github/integration/');
+      return response.data.repositories || [];
     } catch (error) {
       console.error("Error fetching repositories:", error);
       toast({
@@ -104,25 +125,41 @@ export const GitHubService = {
     }
   },
 
-  async getBranches(repoName: string): Promise<GitHubBranch[]> {
+  async getConnectedRepositories(): Promise<GitHubRepository[]> {
     try {
-      
-      return [
-        {
-          name: "main",
-          commit: { sha: "abc123", url: "" },
-        },
-        {
-          name: "develop",
-          commit: { sha: "def456", url: "" },
-        },
-        {
-          name: "feature/new-ui",
-          commit: { sha: "ghi789", url: "" },
-        },
-      ];
+      const response = await api.get('/github/repositories/');
+      // Handling DRF pagination if applicable, otherwise assume records directly
+      return response.data.results || response.data || [];
     } catch (error) {
-      console.error(`Error fetching branches for ${repoName}:`, error);
+      console.error("Error fetching connected repositories:", error);
+      return [];
+    }
+  },
+
+  async connectRepository(repositoryId: number): Promise<void> {
+    try {
+      await api.post('/github/integration/', { repository_id: repositoryId });
+      toast({
+        title: "Success",
+        description: "Repository connected successfully",
+      });
+    } catch (error) {
+      console.error("Error connecting repository:", error);
+      toast({
+        title: "Error",
+        description: "Failed to connect repository",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  },
+
+  async getBranches(repositoryId: string): Promise<GitHubBranch[]> {
+    try {
+      const response = await api.get(`/github/repositories/${repositoryId}/branches/`);
+      return response.data.branches || [];
+    } catch (error) {
+      console.error("Error fetching branches:", error);
       toast({
         title: "Error",
         description: "Failed to fetch repository branches",
@@ -133,28 +170,50 @@ export const GitHubService = {
   },
 
   async analyzeRepository(
-    repoName: string, 
-    branch: string = "main",
-    path: string = "/"
-  ): Promise<boolean> {
+    repositoryId: string,
+    branches?: string[],
+    paths?: string[]
+  ): Promise<{ success: boolean; analysis_id?: string }> {
     try {
-      
-      console.log(`Analyzing ${repoName} (${branch}): ${path}`);
-      
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      const payload: any = {};
+      if (branches && branches.length > 0) payload.branches = branches;
+      if (paths && paths.length > 0) payload.paths = paths;
+
+      const response = await api.post(`/github/repositories/${repositoryId}/analyze/`, payload);
+
       toast({
         title: "Analysis Started",
-        description: `Analyzing ${repoName} repository`,
+        description: "Repository analysis has been initiated",
       });
-      
-      return true;
+
+      return {
+        success: true,
+        analysis_id: response.data.analysis_id
+      };
     } catch (error) {
       console.error("Error analyzing repository:", error);
       toast({
         title: "Error",
         description: "Failed to start repository analysis",
+        variant: "destructive",
+      });
+      return { success: false };
+    }
+  },
+
+  async syncRepository(repositoryId: string): Promise<boolean> {
+    try {
+      await api.post(`/github/repositories/${repositoryId}/sync/`);
+      toast({
+        title: "Sync Started",
+        description: "Repository sync has been initiated",
+      });
+      return true;
+    } catch (error) {
+      console.error("Error syncing repository:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sync repository",
         variant: "destructive",
       });
       return false;

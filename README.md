@@ -74,6 +74,6 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-trick
 
 ## Backend (Django)
 
-A new `backend/` folder will be created at the project root. This will contain the Django backend for BugSquash.AI, including all Django apps, configuration, and API code.
+A new `backend/` folder will be created at the project root. This will contain the Django backend for Aizora, including all Django apps, configuration, and API code.
 
 - To set up the backend, navigate to the `backend/` directory and follow the instructions in its README (to be created).

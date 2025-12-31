@@ -24,4 +24,6 @@ urlpatterns = [
     path('api/auth/', include('apps.users.urls')),
     path('api/', include('apps.logs.urls')),
     path('api/', include('apps.bugs.urls')),
+    path('api/patches/', include('apps.patches.urls')),
+    path('api/github/', include('github_integration.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

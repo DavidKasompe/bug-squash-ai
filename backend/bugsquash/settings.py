@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,6 +47,8 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.logs',
     'apps.bugs',
+    'apps.patches',
+    'github_integration',
     'celery',
     'storages',
 ]
@@ -140,8 +146,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
+    "http://192.168.1.49:8080",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -219,11 +228,11 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_ALWAYS_EAGER = False # Set to True for synchronous testing
+CELERY_TASK_ALWAYS_EAGER = True # Set to True for synchronous testing
 
 # Email settings for password reset
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'noreply@bugsquash.ai'
+DEFAULT_FROM_EMAIL = 'noreply@aizora.ai'
 
 # Site URL for email verification links (adjust for production)
 SITE_URL = 'http://localhost:8000'
@@ -240,3 +249,9 @@ AWS_S3_SIGNATURE_VERSION = 's3v4'
 
 # Add AWS S3 as the default storage backend
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# GitHub OAuth Settings
+GITHUB_CLIENT_ID = os.getenv('GITHUB_CLIENT_ID', '')
+GITHUB_CLIENT_SECRET = os.getenv('GITHUB_CLIENT_SECRET', '')
+GITHUB_REDIRECT_URI = os.getenv('GITHUB_REDIRECT_URI', 'http://localhost:8080/connect-github')
+

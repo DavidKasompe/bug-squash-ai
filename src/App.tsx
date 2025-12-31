@@ -19,7 +19,7 @@ const App = () => {
   const queryClient = new QueryClient();
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="bugsquash-theme">
+    <ThemeProvider defaultTheme="system" storageKey="aizora-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />

@@ -22,7 +22,8 @@ class Bug(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    log = models.ForeignKey('logs.Log', on_delete=models.CASCADE, related_name='bugs')
+    log = models.ForeignKey('logs.Log', on_delete=models.CASCADE, related_name='bugs', null=True, blank=True)
+    repository = models.ForeignKey('github_integration.GitHubRepository', on_delete=models.CASCADE, related_name='bugs', null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bugs')
     
     # Bug Information

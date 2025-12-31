@@ -7,7 +7,7 @@ class BugSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bug
         fields = [
-            'id', 'log', 'title', 'description', 'error_message',
+            'id', 'log', 'repository', 'title', 'description', 'error_message',
             'stack_trace', 'file_path', 'line_number', 'status',
             'severity', 'confidence_score', 'analysis_result',
             'detected_at', 'analyzed_at', 'fixed_at', 'updated_at'

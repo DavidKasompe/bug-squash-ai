@@ -4,7 +4,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-from .tasks import send_verification_email_task
+from .tasks import send_verification_email_task, send_password_reset_email_task
+from .models import GitHubOAuth
 
 User = get_user_model()
 
@@ -70,13 +71,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password'],
-            email_verified=False  # Set email_verified to False by default
+            is_email_verified=False  # Set is_email_verified to False by default
         )
 
         # Generate token and send verification email
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        send_verification_email_task.delay(str(user.pk), token)
+        send_verification_email_task(str(user.pk), token)
 
         return user
 
@@ -95,7 +96,7 @@ class LoginSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Invalid credentials.')
             
             # Check if email is verified
-            if not user.email_verified:
+            if not user.is_email_verified:
                 raise serializers.ValidationError('Email not verified. Please check your inbox.')
 
             if not user.is_active:
@@ -104,4 +105,54 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Must include "username" and "password".')
 
         data['user'] = user
-        return data 
+        return data
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No user found with this email address.")
+        return value
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    password = serializers.CharField(
+        write_only=True,
+        min_length=6,
+        error_messages={
+            'min_length': 'Password must be at least 6 characters long.',
+            'blank': 'Password cannot be blank.',
+        }
+    )
+    password_confirm = serializers.CharField(
+        write_only=True,
+        min_length=6,
+        error_messages={
+            'min_length': 'Password must be at least 6 characters long.',
+            'blank': 'Password confirmation cannot be blank.',
+        }
+    )
+
+    def validate(self, data):
+        if data['password'] != data['password_confirm']:
+            raise serializers.ValidationError({
+                'password_confirm': 'Passwords do not match.'
+            })
+        return data
+
+class GitHubOAuthSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GitHubOAuth
+        fields = ['github_id', 'access_token', 'refresh_token', 'token_expires_at']
+        read_only_fields = ['github_id', 'access_token', 'refresh_token', 'token_expires_at']
+
+class GitHubCallbackSerializer(serializers.Serializer):
+    code = serializers.CharField(required=True)
+    state = serializers.CharField(required=True)
+
+class GitHubUserSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    login = serializers.CharField()
+    email = serializers.EmailField(allow_null=True)
+    name = serializers.CharField(allow_null=True)
+    avatar_url = serializers.URLField(allow_null=True) 

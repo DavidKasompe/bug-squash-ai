@@ -8,7 +8,6 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-@shared_task
 def send_verification_email_task(user_id, token):
     """Sends an email verification link to the user."""
     try:
@@ -18,8 +17,9 @@ def send_verification_email_task(user_id, token):
         # For Django's templated views, you'd use reverse with a Django view.
         # For an API endpoint, it's a direct URL that the frontend can consume.
         verify_link = f"{settings.SITE_URL}/api/auth/verify-email/{user_id}/{token}/"
+        print(f"Verification link: {verify_link}")
 
-        subject = 'Verify Your BugSquash.AI Account'
+        subject = 'Verify Your Aizora Account'
         html_message = render_to_string(
             'registration/account_verification_email.html', 
             {'user': user, 'verify_link': verify_link}
@@ -39,4 +39,32 @@ def send_verification_email_task(user_id, token):
     except User.DoesNotExist:
         print(f"User with ID {user_id} not found for email verification.")
     except Exception as e:
-        print(f"Error sending verification email to user {user_id}: {e}") 
+        print(f"Error sending verification email to user {user_id}: {e}")
+
+def send_password_reset_email_task(user_id, token):
+    """
+    Send password reset email to user
+    """
+    try:
+        user = User.objects.get(pk=user_id)
+        reset_url = f"{settings.SITE_URL}/reset-password/{user.pk}/{token}/"
+        
+        context = {
+            'user': user,
+            'reset_url': reset_url,
+        }
+        
+        html_message = render_to_string('emails/password_reset.html', context)
+        plain_message = strip_tags(html_message)
+        
+        send_mail(
+            subject='Reset Your Password - Aizora',
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_message,
+        )
+        
+        return True
+    except User.DoesNotExist:
+        return False 

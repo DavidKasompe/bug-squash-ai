@@ -1,13 +1,21 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import RegisterView, LoginView, VerifyEmailView, PasswordResetRequestView, PasswordResetConfirmView, test_aws_credentials
+from .views import (
+    RegisterView, LoginView, EmailVerificationView,
+    PasswordResetRequestView, PasswordResetConfirmView,
+    GitHubOAuthView, GitHubCallbackView
+)
 from django.contrib.auth import views as auth_views # Import Django's auth views
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('verify-email/<str:uidb64>/<str:token>/', VerifyEmailView.as_view(), name='verify_email'),
+    path('verify-email/<str:uidb64>/<str:token>/', EmailVerificationView.as_view(), name='verify_email'),
+    path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),
+    path('password-reset/<str:token>/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path('github/oauth/', GitHubOAuthView.as_view(), name='github-oauth'),
+    path('github/callback/', GitHubCallbackView.as_view(), name='github-callback'),
 
     # Password Reset URLs
     path('password_reset/', 
@@ -34,5 +42,4 @@ urlpatterns = [
          ),
          name='password_reset_complete'
     ),
-    path('test-aws/', test_aws_credentials, name='test-aws-credentials'),
 ] 

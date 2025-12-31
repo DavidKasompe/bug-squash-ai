@@ -104,7 +104,7 @@ const SignUp = () => {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Join BugSquash.AI to start finding and fixing bugs automatically"
+      subtitle="Join Aizora to start finding and fixing bugs automatically"
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">

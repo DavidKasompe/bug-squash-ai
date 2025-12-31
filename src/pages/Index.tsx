@@ -22,7 +22,7 @@ const Index = () => {
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-                BugSquash.AI automatically detects, analyzes, and suggests fixes
+                Aizora automatically detects, analyzes, and suggests fixes
                 for bugs in your code using advanced AI models. Save hours of
                 debugging time.
               </p>
@@ -81,7 +81,7 @@ const Index = () => {
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-4">
-                How BugSquash.AI Works
+                How Aizora Works
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
                 Our AI-powered platform streamlines your debugging workflow with

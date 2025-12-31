@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, Droplet, Github } from "lucide-react";
+import { useUserStore } from "@/store/userStore";
+import { useQuery } from "@tanstack/react-query";
+import { GitHubService } from "@/services/GitHubService";
 import { ThemeToggle } from "../theme-toggle";
 import { cn } from "@/lib/utils";
-import { Menu, X, Droplet } from "lucide-react";
 
-
-const BugSquashLogo = () => (
+const AizoraLogo = () => (
   <svg
     width="28"
     height="28"
@@ -57,61 +59,59 @@ const ACCENT_COLORS = [
 
 function setAccentColor(color: string) {
   document.documentElement.style.setProperty("--accent-color", color);
-  localStorage.setItem("bugsquash-accent", color);
+  localStorage.setItem("aizora-accent", color);
 }
 
 function getAccentColor() {
-  return localStorage.getItem("bugsquash-accent") || "#2563eb";
+  return localStorage.getItem("aizora-accent") || "#2563eb";
 }
 
-const Header = () => {
-  const location = useLocation();
+export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
-  const [showAccentPicker, setShowAccentPicker] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  
+  const { user, logout, isLoggedIn } = useUserStore();
+
   useEffect(() => {
-    if (!isMobileMenuOpen) return;
-    const menu = mobileMenuRef.current;
-    if (!menu) return;
-    const focusableSelectors = [
-      'a[href]:not([tabindex="-1"])',
-      'button:not([tabindex="-1"])',
-      '[tabindex]:not([tabindex="-1"])',
-    ];
-    const focusableEls = menu.querySelectorAll<HTMLElement>(
-      focusableSelectors.join(", ")
-    );
-    if (focusableEls.length) focusableEls[0].focus();
+    if (isMobileMenuOpen && mobileMenuRef.current) {
+      const menu = mobileMenuRef.current;
+      const focusable = menu.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const first = focusable[0] as HTMLElement;
+      const last = focusable[focusable.length - 1] as HTMLElement;
 
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setIsMobileMenuOpen(false);
-        return;
-      }
-      if (e.key !== "Tab" || focusableEls.length === 0) return;
-      const first = focusableEls[0];
-      const last = focusableEls[focusableEls.length - 1];
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
+      function handleKeyDown(e: KeyboardEvent) {
+        if (e.key !== "Tab") return;
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
         }
       }
+      menu.addEventListener("keydown", handleKeyDown);
+      return () => menu.removeEventListener("keydown", handleKeyDown);
     }
-    menu.addEventListener("keydown", handleKeyDown);
-    return () => menu.removeEventListener("keydown", handleKeyDown);
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
     setAccentColor(getAccentColor());
   }, []);
+
+  const { data: githubStatus } = useQuery({
+    queryKey: ['githubStatus'],
+    queryFn: GitHubService.getStatus,
+    enabled: isLoggedIn,
+  });
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -129,17 +129,16 @@ const Header = () => {
         <Link
           to="/"
           className="flex items-center gap-3 group select-none"
-          aria-label="BugSquash.AI Home"
+          aria-label="Aizora Home"
         >
           <span className="w-10 h-10 flex items-center justify-center">
-            <BugSquashLogo />
+            <AizoraLogo />
           </span>
           <span className="font-bold text-xl text-primary dark:bg-gradient-to-r dark:from-primary dark:via-primary/80 dark:to-accent dark:bg-clip-text dark:text-transparent dark:animate-gradient">
-            BugSquash.AI
+            Aizora
           </span>
         </Link>
 
-        
         <nav
           className="hidden md:flex gap-6"
           role="navigation"
@@ -167,34 +166,62 @@ const Header = () => {
 
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          <div className="hidden md:flex items-center gap-2">
+          {isLoggedIn && (
             <Link
-              to="/signin"
-              className="px-4 py-2 rounded-md text-sm font-medium transition-colors hover:bg-secondary/80"
+              to="/connect-github"
+              className={cn(
+                "p-2 rounded-md transition-colors relative group",
+                githubStatus?.connected 
+                  ? "text-primary hover:bg-primary/10" 
+                  : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-secondary/80"
+              )}
+              title={githubStatus?.connected ? `Connected as ${githubStatus.username}` : "Connect GitHub"}
+              aria-label="GitHub Connection"
             >
-              Sign In
+              <Github className="w-5 h-5" />
+              {githubStatus?.connected && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+              )}
             </Link>
-            <Link
-              to="/signup"
-              className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium transition-all duration-300 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
-            >
-              Sign Up
-            </Link>
-          </div>
-
-          
-          <div className="hidden md:flex items-center ml-2">
-            <div
-              className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-bold text-lg select-none"
-              tabIndex={0}
-              aria-label="User profile placeholder"
-              role="button"
-            >
-              U
+          )}
+          {isLoggedIn ? (
+            <>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate("/");
+                }}
+                className="px-4 py-2 rounded-md text-sm font-medium transition-colors hover:bg-secondary/80"
+              >
+                Logout
+              </button>
+              <div className="hidden md:flex items-center ml-2">
+                <div
+                  className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-bold text-lg select-none"
+                  tabIndex={0}
+                  aria-label="User profile"
+                  role="button"
+                >
+                  {user?.username?.[0]?.toUpperCase() || "U"}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="hidden md:flex items-center gap-2">
+              <Link
+                to="/signin"
+                className="px-4 py-2 rounded-md text-sm font-medium transition-colors hover:bg-secondary/80"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/signup"
+                className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium transition-all duration-300 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
+              >
+                Sign Up
+              </Link>
             </div>
-          </div>
-
-          
+          )}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden p-2 rounded-md hover:bg-secondary/80 transition-colors"
@@ -211,7 +238,6 @@ const Header = () => {
         </div>
       </div>
 
-      
       {isMobileMenuOpen && (
         <div
           id="mobile-menu"
@@ -236,30 +262,47 @@ const Header = () => {
                   aria-current={isActive(path) ? "page" : undefined}
                 >
                   {label}
+                  {isActive(path) && (
+                    <span className="absolute -bottom-[1.5px] left-0 right-0 h-0.5 bg-primary rounded-full" />
+                  )}
                 </Link>
               ))}
             </nav>
-            <div className="flex flex-col gap-2 pt-4 border-t border-border/40">
-              <Link
-                to="/signin"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="w-full px-4 py-2 min-h-[44px] rounded-md text-sm font-medium text-center transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/signup"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="w-full px-4 py-2 min-h-[44px] rounded-md bg-primary text-primary-foreground text-sm font-medium text-center transition-all duration-300 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                Sign Up
-              </Link>
+            <div className="flex flex-col gap-2 pt-2 border-t border-border/40">
+              {isLoggedIn ? (
+                <button
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(false);
+                    navigate("/");
+                  }}
+                  className="w-full text-left px-2 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Logout
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/signin"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="px-2 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="px-2 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground text-center"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
     </header>
   );
-};
-
+}
 export default Header;
