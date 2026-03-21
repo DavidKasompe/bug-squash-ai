@@ -1,5 +1,5 @@
-
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
 	darkMode: ["class"],
@@ -88,15 +88,30 @@ export default {
 				'fade-in': {
 					'0%': { opacity: '0', transform: 'translateY(10px)' },
 					'100%': { opacity: '1', transform: 'translateY(0)' }
+				},
+				'cube-rotate': {
+					'0%, 100%': { transform: 'perspective(1000px) rotateX(15deg) rotateY(-15deg) translateY(0px)' },
+					'50%': { transform: 'perspective(1000px) rotateX(10deg) rotateY(15deg) translateY(-20px)' },
+				},
+				'glow-pulse': {
+					'0%, 100%': { opacity: '0.4', transform: 'scale(0.95)' },
+					'50%': { opacity: '0.8', transform: 'scale(1.05)' },
+				},
+				'marquee': {
+					'0%': { transform: 'translateX(0%)' },
+					'100%': { transform: 'translateX(-50%)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'pulse-glow': 'pulse-glow 2s infinite',
-				'fade-in': 'fade-in 0.3s ease-out'
+				'fade-in': 'fade-in 0.3s ease-out',
+				'cube-rotate': 'cube-rotate 8s ease-in-out infinite',
+				'glow-pulse': 'glow-pulse 6s ease-in-out infinite',
+				'marquee': 'marquee 30s linear infinite'
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindcssAnimate],
 } satisfies Config;
