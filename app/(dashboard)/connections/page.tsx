@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { Github, UploadCloud, Activity, CheckCircle2, Wifi, RefreshCw, AlertCircle, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 type Repo  = { id: number; name: string; full_name: string; private: boolean; language: string | null; updated_at: string };
 type Inst  = { id: string; installation_id: string; account_login: string; account_type: string; repos: Repo[]; created_at: string };
@@ -22,6 +16,29 @@ export default function ConnectionsPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  async function loadInstallations() {
+    try {
+      const response = await fetch("/api/github/installations", {
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        setError("Failed to load connected repositories.");
+        setInstallations([]);
+        return;
+      }
+
+      const payload = await response.json();
+      setInstallations((payload.installations as Inst[]) ?? []);
+    } catch {
+      setError("Failed to load connected repositories.");
+      setInstallations([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "connected") setSuccess("Repository connected successfully!");
@@ -31,11 +48,7 @@ export default function ConnectionsPage() {
   }, []);
 
   useEffect(() => {
-    supabase
-      .from("installations")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => { setInstallations((data as Inst[]) ?? []); setLoading(false); });
+    void loadInstallations();
   }, []);
 
   const handleConnect = () => {

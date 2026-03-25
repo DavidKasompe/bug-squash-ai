@@ -17,7 +17,7 @@ export default async function CodePatchPage({
   const session = await getServerSession();
 
   if (isAuthConfigured && !session) {
-    redirect("/signin");
+    redirect("/login");
   }
 
   const { bugId } = await params;

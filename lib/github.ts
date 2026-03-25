@@ -50,6 +50,17 @@ export async function getOctokit(installationId: string): Promise<Octokit> {
   return new Octokit({ auth: token });
 }
 
+export async function getDefaultBranch(installationId: string, repo: string): Promise<string> {
+  const [owner, repoName] = repo.split("/");
+  const octokit = await getOctokit(installationId);
+  const { data } = await octokit.repos.get({
+    owner,
+    repo: repoName,
+  });
+
+  return data.default_branch || "main";
+}
+
 // ─── Fetch file content from a repo ──────────────────────────────────────────
 export async function fetchFileFromGitHub(
   installationId: string,

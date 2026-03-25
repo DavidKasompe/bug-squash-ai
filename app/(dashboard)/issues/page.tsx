@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { Filter, AlertTriangle, ArrowRight, Activity, Cpu, RefreshCw, Upload } from "lucide-react";
 import Link from "next/link";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 type Bug = {
   id: string;
@@ -93,27 +87,42 @@ export default function BugReportsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string | null>(null);
 
-  // Initial load
   useEffect(() => {
-    supabase.from("bugs").select("*").order("created_at", { ascending: false })
-      .then(({ data }) => { setBugs(data ?? []); setLoading(false); });
-  }, []);
+    let isActive = true;
 
-  // Realtime subscription — status changes update live
-  useEffect(() => {
-    const channel = supabase
-      .channel("bugs-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "bugs" }, payload => {
-        if (payload.eventType === "INSERT") {
-          setBugs(prev => [payload.new as Bug, ...prev]);
-        } else if (payload.eventType === "UPDATE") {
-          setBugs(prev => prev.map(b => b.id === (payload.new as Bug).id ? payload.new as Bug : b));
-        } else if (payload.eventType === "DELETE") {
-          setBugs(prev => prev.filter(b => b.id !== payload.old.id));
+    async function loadBugs() {
+      try {
+        const response = await fetch("/api/bugs", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Failed to load bugs.");
         }
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+        if (isActive) {
+          setBugs((payload.bugs as Bug[]) ?? []);
+        }
+      } catch (error) {
+        console.error("[issues/page]", error);
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadBugs();
+    const intervalId = window.setInterval(() => {
+      void loadBugs();
+    }, 5000);
+
+    return () => {
+      isActive = false;
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   const displayed = filter ? bugs.filter(b => b.severity === filter) : bugs;

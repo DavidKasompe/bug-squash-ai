@@ -1,48 +1,77 @@
 # Mirai Implementation Context
 
-## What Has Been Implemented
+## Current Implementation State
 
-### Platform
+The codebase is no longer just a migration scaffold. It now includes a product-facing dashboard and working integrations across chat, bug analysis, and GitHub App workflows.
 
-- Replaced the repo's active app target from Vite to Next.js.
-- Added Next.js App Router pages for:
-  - landing
-  - sign in
-  - sign up
-  - dashboard
-  - upload
-  - GitHub connect
-  - validation
-  - code patch preview
+## What Is Implemented
+
+### Frontend
+
+- Public marketing homepage with polished brand/UI treatment
+- Dedicated login and signup pages
+- Dashboard shell with sidebar navigation
+- Overview page with AI chat UX
+- Issues list page with live bug feed behavior
+- Connections page for GitHub App installs and manual trace uploads
+- Additional dashboard pages for workflows, usage, API keys, and settings
 
 ### Auth
 
-- Added Better Auth server configuration and Next.js route handler.
-- Added Better Auth client usage for sign-in, sign-up, and sign-out.
-- Added route protection for authenticated Mirai pages.
+- Better Auth server setup
+- Better Auth client helpers
+- Email/password login flow
+- GitHub social sign-in trigger
 
-### Data and Storage
+### AI flows
 
-- Added Supabase admin client support.
-- Added Supabase-backed server reads with mock fallback.
-- Added upload API route to store files in Supabase Storage and register upload metadata.
-- Expanded `supabase/schema.sql` to match Mirai entities.
+- Structured bug analysis prompt and parser
+- Chat-based AI debugging flow using Gemini streaming
+- Internal async analysis endpoint for webhook-driven analysis
+- AI output persisted back into bug and patch records
 
-### AI Workflow
+### GitHub flows
 
-- Added a Mastra-backed bug analysis workflow.
-- Wired `/api/analysis` to the workflow.
-- Kept a safe fallback response when `OPENAI_API_KEY` is missing.
+- GitHub App installation redirect
+- GitHub installation callback handling
+- Installation token caching in database
+- Repo listing from installations
+- File fetch from repository for context-aware debugging
+- Patch commit, PR creation, and optional auto-merge
+- Webhook ingestion for workflow failures and PR lifecycle updates
 
-### Repo Documentation
+### Data model
 
-- Updated package/runtime config for Next.js.
-- Added `.env.example`.
-- Added this `context/` folder so future work can read migration state quickly.
+- Supabase migration for:
+  - installations
+  - bugs
+  - patches
+  - chat_sessions
 
-## Important Current Limitations
+### Legacy code handling
 
-- Better Auth database tables still need to be created/migrated in the target Postgres database.
-- Supabase table and bucket creation still need to be applied in the real environment.
-- Validation and patch data are still mock-backed unless corresponding Supabase records exist.
-- GitHub integration UI is ported, but the real OAuth and repository sync flow is not fully wired yet.
+- Old Vite/Django implementation is still present as reference
+- Active Next.js runtime is the Mirai app
+- Legacy `src/pages` have been isolated from the active build path
+
+## What Is Still Incomplete Or Inconsistent
+
+- `context/` docs had fallen behind the codebase before this update
+- issue detail page is still static/demo content rather than data-backed
+- client-side Supabase access and Better Auth session identity are not fully aligned
+- some earlier scaffold pages/routes still coexist with newer product routes
+- the current auth setup assumes configuration more aggressively than the older guarded implementation
+- parts of the earlier `lib/mirai/*` mock-backed layer still exist beside the newer Supabase-first flow
+
+## Current Source Of Truth
+
+For the current runtime behavior, trust these first:
+
+- `app/(dashboard)/*`
+- `app/api/*`
+- `lib/auth.ts`
+- `lib/github.ts`
+- `lib/prompts.ts`
+- `supabase/migrations/20260320_mirai_core.sql`
+
+Treat the older scaffold-oriented docs and mock-data layer as partial historical context, not the definitive architecture.

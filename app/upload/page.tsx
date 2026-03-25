@@ -8,7 +8,7 @@ export default async function UploadPage() {
   const session = await getServerSession();
 
   if (isAuthConfigured && !session) {
-    redirect("/signin");
+    redirect("/login");
   }
 
   const repositories = await listRepositories();

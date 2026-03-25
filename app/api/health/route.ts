@@ -9,7 +9,7 @@ export async function GET() {
     services: {
       database: env.NEXT_PUBLIC_SUPABASE_URL ? "configured" : "missing",
       auth: env.BETTER_AUTH_SECRET ? "configured" : "missing",
-      mastra: env.OPENAI_API_KEY ? "configured" : "missing",
+      llm: env.GROQ_API_KEY ? "configured" : "missing",
     },
   });
 }

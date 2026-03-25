@@ -16,17 +16,15 @@ export async function GET() {
 
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
-    .from("bugs")
+    .from("installations")
     .select("*")
     .eq("user_id", session.user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("[api/bugs]", error);
-    return NextResponse.json({ error: "Failed to load bugs." }, { status: 500 });
+    console.error("[github/installations]", error);
+    return NextResponse.json({ error: "Failed to load installations." }, { status: 500 });
   }
 
-  return NextResponse.json({
-    bugs: data ?? [],
-  });
+  return NextResponse.json({ installations: data ?? [] });
 }

@@ -1,13 +1,15 @@
 -- Mirai: Core Integration Schema Migration
 -- Run: paste directly in Supabase SQL editor and click Run
+-- Note: Mirai uses Better Auth. user_id values are text ids from Better Auth,
+-- not UUIDs from Supabase Auth's auth.users table.
 
 -- Enable UUID extension
 create extension if not exists "pgcrypto";
 
--- ─── GitHub Installations ────────────────────────────────────────────────────
+-- GitHub Installations
 create table if not exists installations (
   id                uuid primary key default gen_random_uuid(),
-  user_id           uuid references auth.users on delete cascade,
+  user_id           text not null,
   installation_id   text not null,
   account_login     text,
   account_type      text default 'User',
@@ -18,13 +20,11 @@ create table if not exists installations (
   unique (user_id, installation_id)
 );
 alter table installations enable row level security;
-create policy "Users can manage own installations"
-  on installations for all using (auth.uid() = user_id);
 
--- ─── Bugs ────────────────────────────────────────────────────────────────────
+-- Bugs
 create table if not exists bugs (
   id                  uuid primary key default gen_random_uuid(),
-  user_id             uuid references auth.users on delete cascade,
+  user_id             text not null,
   installation_id     text,
   repo                text not null,
   title               text,
@@ -43,17 +43,15 @@ create table if not exists bugs (
   resolved_at         timestamptz
 );
 alter table bugs enable row level security;
-create policy "Users can manage own bugs"
-  on bugs for all using (auth.uid() = user_id);
 
 create index if not exists bugs_user_id_idx on bugs(user_id);
-create index if not exists bugs_status_idx  on bugs(status);
+create index if not exists bugs_status_idx on bugs(status);
 
--- ─── Patches ─────────────────────────────────────────────────────────────────
+-- Patches
 create table if not exists patches (
   id                uuid primary key default gen_random_uuid(),
   bug_id            uuid references bugs on delete cascade,
-  user_id           uuid references auth.users on delete cascade,
+  user_id           text not null,
   diff              text not null,
   pr_url            text,
   pr_number         integer,
@@ -63,18 +61,14 @@ create table if not exists patches (
   created_at        timestamptz default now()
 );
 alter table patches enable row level security;
-create policy "Users can manage own patches"
-  on patches for all using (auth.uid() = user_id);
 
--- ─── Chat Sessions ───────────────────────────────────────────────────────────
+-- Chat Sessions
 create table if not exists chat_sessions (
   id          uuid primary key default gen_random_uuid(),
-  user_id     uuid references auth.users on delete cascade,
+  user_id     text not null,
   bug_id      uuid references bugs on delete set null,
   title       text,
   messages    jsonb default '[]',
   created_at  timestamptz default now()
 );
 alter table chat_sessions enable row level security;
-create policy "Users can manage own sessions"
-  on chat_sessions for all using (auth.uid() = user_id);

@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { generateText } from "ai";
-import { google } from "@ai-sdk/google";
 import { ANALYSIS_SYSTEM_PROMPT, parseAnalysisResponse } from "@/lib/prompts";
+import { getGroqModel, isGroqConfigured } from "@/lib/llm";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,18 +15,32 @@ export async function POST(req: Request) {
     return new Response("Forbidden", { status: 403 });
   }
 
+  if (!isGroqConfigured) {
+    return Response.json({ error: "GROQ_API_KEY is not configured." }, { status: 500 });
+  }
+
   const { bugId, stackTrace } = await req.json();
   if (!bugId || !stackTrace) {
     return Response.json({ error: "bugId and stackTrace required" }, { status: 400 });
   }
 
   try {
+    const { data: bugRecord, error: bugLookupError } = await supabase
+      .from("bugs")
+      .select("id, user_id")
+      .eq("id", bugId)
+      .single();
+
+    if (bugLookupError || !bugRecord) {
+      return Response.json({ error: "Bug not found" }, { status: 404 });
+    }
+
     // Mark bug as Investigating
     await supabase.from("bugs").update({ status: "Investigating" }).eq("id", bugId);
 
     // Run AI analysis
     const { text } = await generateText({
-      model:  google("gemini-2.0-flash-exp"),
+      model:  getGroqModel(),
       system: ANALYSIS_SYSTEM_PROMPT,
       prompt: stackTrace,
     });
@@ -51,6 +65,7 @@ export async function POST(req: Request) {
     if (parsed.diff) {
       await supabase.from("patches").insert({
         bug_id:          bugId,
+        user_id:         bugRecord.user_id,
         diff:            parsed.diff,
         tests_generated: parsed.tests,
         status:          "pending",

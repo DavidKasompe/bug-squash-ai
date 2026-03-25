@@ -20,6 +20,7 @@ export async function GET(
     .from("patches")
     .select("id, status, pr_url, pr_number")
     .eq("bug_id", bugId)
+    .eq("user_id", session.user.id)
     .order("created_at", { ascending: false })
     .limit(1)
     .single();

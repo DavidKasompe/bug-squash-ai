@@ -40,7 +40,7 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-4 text-sm font-medium">
-            <Link href="/signin" className="text-white/80 hover:text-white hidden sm:block transition-colors">
+            <Link href="/login" className="text-white/80 hover:text-white hidden sm:block transition-colors">
               Log In
             </Link>
             <Link 
@@ -394,4 +394,3 @@ export default function HomePage() {
     </main>
   );
 }
-

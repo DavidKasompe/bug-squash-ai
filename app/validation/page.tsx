@@ -8,7 +8,7 @@ export default async function ValidationPage() {
   const session = await getServerSession();
 
   if (isAuthConfigured && !session) {
-    redirect("/signin");
+    redirect("/login");
   }
 
   const validation = await getValidationDetails();

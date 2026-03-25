@@ -3,10 +3,10 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { applyPatch } from "diff";
 import {
-  getInstallationToken,
   fetchFileFromGitHub,
   createBranch,
   commitFile,
+  getDefaultBranch,
   openPullRequest,
   mergePullRequest,
 } from "@/lib/github";
@@ -54,10 +54,12 @@ export async function POST(
     }
 
     // ── 2. Fetch current file from GitHub ───────────────────────────────────
+    const baseBranch = await getDefaultBranch(installationId, repo);
     const { content: currentContent, sha: fileSha } = await fetchFileFromGitHub(
       installationId,
       repo,
-      affectedFile
+      affectedFile,
+      baseBranch
     );
 
     // ── 3. Apply the unified diff ───────────────────────────────────────────
@@ -70,7 +72,7 @@ export async function POST(
     const shortId  = bug.id.slice(0, 8);
     const branchName = `mirai/fix-${shortId}-${Date.now()}`;
 
-    await createBranch(installationId, repo, branchName);
+    await createBranch(installationId, repo, branchName, baseBranch);
 
     // ── 5. Commit patched file ──────────────────────────────────────────────
     await commitFile(
@@ -88,7 +90,7 @@ export async function POST(
       installationId,
       repo,
       branchName,
-      "main",
+      baseBranch,
       `[Mirai] ${bug.title}`,
       buildPRBody(bug)
     );

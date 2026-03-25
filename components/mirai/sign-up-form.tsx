@@ -89,7 +89,7 @@ export function SignUpForm() {
 
       <p className="text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/signin" className="text-foreground underline underline-offset-4">
+        <Link href="/login" className="text-foreground underline underline-offset-4">
           Sign in
         </Link>
       </p>

@@ -13,8 +13,9 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const installationId = searchParams.get("installation_id");
   const setupAction    = searchParams.get("setup_action"); // install | update | delete
+  const parsedInstallationId = installationId ? parseInt(installationId, 10) : NaN;
 
-  if (!installationId) {
+  if (!installationId || Number.isNaN(parsedInstallationId)) {
     return Response.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/connections?error=missing_installation`);
   }
 
@@ -33,13 +34,17 @@ export async function GET(req: Request) {
 
     const { token, expiresAt } = await appAuth({
       type:           "installation",
-      installationId: parseInt(installationId),
+      installationId: parsedInstallationId,
     });
 
+    // /app/installations/{id} requires app authentication, not installation auth.
+    const appAuthToken = await appAuth({ type: "app" });
+
     // List repos accessible to this installation
-    const octokit = new Octokit({ auth: token });
-    const { data: repoData } = await octokit.apps.listReposAccessibleToInstallation({ per_page: 100 });
-    const { data: installation } = await octokit.apps.getInstallation({ installation_id: parseInt(installationId) });
+    const octokitInstallation = new Octokit({ auth: token });
+    const octokitApp = new Octokit({ auth: appAuthToken.token });
+    const { data: repoData } = await octokitInstallation.apps.listReposAccessibleToInstallation({ per_page: 100 });
+    const { data: installation } = await octokitApp.apps.getInstallation({ installation_id: parsedInstallationId });
 
     const repos = repoData.repositories.map(r => ({
       id:         r.id,

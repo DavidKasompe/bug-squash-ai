@@ -211,10 +211,22 @@ export default function OverviewPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [bugIds, setBugIds] = useState<Record<number, string>>({});
+  const [repositories, setRepositories] = useState<Array<{
+    installation_id: string;
+    full_name: string;
+  }>>([]);
+  const [selectedRepoKey, setSelectedRepoKey] = useState<string>("");
+
+  const selectedRepo = repositories.find((repository) => `${repository.installation_id}:${repository.full_name}` === selectedRepoKey) ?? null;
 
   const { messages, input, setInput, handleSubmit, isLoading, append } = useChat({
     api: "/api/chat",
-    body: { sessionId },
+    streamProtocol: "text",
+    body: {
+      sessionId,
+      repo: selectedRepo?.full_name,
+      installationId: selectedRepo?.installation_id,
+    },
     onResponse: (res) => {
       const sid = res.headers.get("x-session-id");
       const bid = res.headers.get("x-bug-id");
@@ -227,6 +239,51 @@ export default function OverviewPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadRepositories() {
+      try {
+        const response = await fetch("/api/github/installations", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Failed to load repositories.");
+        }
+
+        const nextRepositories = ((payload.installations as Array<{
+          installation_id: string;
+          repos?: Array<{ full_name: string }>;
+        }>) ?? []).flatMap((installation) =>
+          (installation.repos ?? []).map((repo) => ({
+            installation_id: installation.installation_id,
+            full_name: repo.full_name,
+          })),
+        );
+
+        if (!isActive) {
+          return;
+        }
+
+        setRepositories(nextRepositories);
+        if (!selectedRepoKey && nextRepositories.length > 0) {
+          setSelectedRepoKey(`${nextRepositories[0].installation_id}:${nextRepositories[0].full_name}`);
+        }
+      } catch (error) {
+        console.error("[overview/page]", error);
+      }
+    }
+
+    void loadRepositories();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedRepoKey]);
 
   const handleSuggest = (s: string) => {
     setInput(s);
@@ -249,6 +306,21 @@ export default function OverviewPage() {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <select
+            value={selectedRepoKey}
+            onChange={(event) => setSelectedRepoKey(event.target.value)}
+            className="max-w-64 rounded-lg border border-black/[0.08] bg-white px-3 py-1.5 text-xs font-semibold text-black/60 outline-none"
+          >
+            <option value="">No repo context</option>
+            {repositories.map((repository) => {
+              const value = `${repository.installation_id}:${repository.full_name}`;
+              return (
+                <option key={value} value={value}>
+                  {repository.full_name}
+                </option>
+              );
+            })}
+          </select>
           <button onClick={() => { window.location.reload(); }}
             className="flex items-center gap-1.5 border border-black/[0.08] bg-white rounded-lg px-3 py-1.5 text-xs font-semibold text-black/60 hover:bg-black/[0.02]">
             <Plus className="w-3.5 h-3.5" /> New session
