@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
+    "tunnel:lt": "npx localtunnel --port 3000 --subdomain mirai-bugsquash",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."

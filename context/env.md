@@ -22,10 +22,11 @@
 
 ## AI
 
-- `OPENAI_API_KEY`
-- `GOOGLE_GENERATIVE_AI_API_KEY`
+- `GROQ_API_KEY`
+- `GROQ_BASE_URL`
+- `GROQ_MODEL`
 
-The current runtime analysis/chat code is using Gemini through `@ai-sdk/google`, so Google AI credentials are now part of the active environment story.
+The current runtime analysis/chat code is using Groq through the OpenAI-compatible client layer.
 
 ## GitHub App
 
@@ -43,5 +44,6 @@ This is currently used to protect the internal `/api/analyze` endpoint from arbi
 ## Notes
 
 - `DATABASE_URL` is expected to point at the Postgres database used by Better Auth and the app data model.
-- The app currently uses Supabase both as a direct database client target and as the source of RLS policies.
-- Because Better Auth is not the same thing as Supabase Auth, env correctness alone does not solve the current identity/RLS mismatch; code changes are still needed there.
+- The app uses Better Auth session ids, so app-owned tables store `user_id` as text rather than `auth.users` UUIDs.
+- For free public access during development, Mirai can be exposed with localtunnel via `npm run tunnel:lt`.
+- When using localtunnel, `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_URL`, the GitHub App callback URL, and the GitHub webhook URL must all be updated to the active localtunnel host.

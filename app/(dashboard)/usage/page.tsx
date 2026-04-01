@@ -1,4 +1,4 @@
-import { BarChart2, Zap, Bug, GitMerge, TrendingUp, Clock } from "lucide-react";
+import { Zap, Bug, GitMerge, TrendingUp, Clock } from "lucide-react";
 
 const weeklyData = [
   { day: "Mon", bugs: 3, patches: 2 },

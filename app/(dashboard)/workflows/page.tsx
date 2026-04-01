@@ -1,4 +1,4 @@
-import { Zap, Plus, GitMerge, Bug, Bell, ChevronRight, ToggleLeft, ToggleRight, Clock, CheckCircle2 } from "lucide-react";
+import { Zap, Plus, GitMerge, Bug, Bell, ChevronRight, ToggleLeft, ToggleRight, Clock } from "lucide-react";
 
 const workflows = [
   {

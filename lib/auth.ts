@@ -42,7 +42,7 @@ export const getServerSession = async () => {
     return await auth.api.getSession({
       headers: headersList
     });
-  } catch (e) {
+  } catch {
     return null;
   }
 };

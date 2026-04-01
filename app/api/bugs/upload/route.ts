@@ -26,7 +26,8 @@ export async function POST(req: Request) {
   if (error || !bug) return Response.json({ error: "Failed to create bug" }, { status: 500 });
 
   // Kick off async analysis
-  fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/analyze`, {
+  const requestOrigin = new URL(req.url).origin;
+  fetch(`${requestOrigin}/api/analyze`, {
     method:  "POST",
     headers: { "Content-Type": "application/json", "x-internal-key": process.env.INTERNAL_API_KEY! },
     body:    JSON.stringify({ bugId: bug.id, stackTrace: trace }),

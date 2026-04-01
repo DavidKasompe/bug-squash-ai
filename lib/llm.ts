@@ -10,5 +10,6 @@ const groq = createOpenAI({
 });
 
 export function getGroqModel() {
-  return groq(env.GROQ_MODEL);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return groq(env.GROQ_MODEL) as any;
 }

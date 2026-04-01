@@ -23,7 +23,7 @@ export function SignInForm() {
     const { error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL: "/overview",
       rememberMe: true,
     });
 
@@ -34,7 +34,7 @@ export function SignInForm() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/overview");
     router.refresh();
   }
 

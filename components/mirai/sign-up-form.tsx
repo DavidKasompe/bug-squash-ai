@@ -24,7 +24,7 @@ export function SignUpForm() {
       name,
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL: "/overview",
     });
 
     setIsSubmitting(false);
@@ -34,7 +34,7 @@ export function SignUpForm() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/overview");
     router.refresh();
   }
 

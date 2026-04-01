@@ -19,7 +19,7 @@ export default function SignupPage() {
     setStatus("loading");
     
     try {
-      const { data, error } = await signUp.email({
+      const { error } = await signUp.email({
         email,
         password,
         name,
@@ -33,7 +33,7 @@ export default function SignupPage() {
         setStatus("success");
         router.push("/overview");
       }
-    } catch (err) {
+    } catch {
       setStatus("error");
       setErrorMessage("An unexpected error occurred.");
     }

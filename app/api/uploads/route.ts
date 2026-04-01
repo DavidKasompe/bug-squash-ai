@@ -1,11 +1,17 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 
+import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
-import { createUploadRecord } from "@/lib/mirai/server";
 import { createSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) {
+    return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+  }
+
   const formData = await request.formData();
   const repositoryId = formData.get("repositoryId");
   const file = formData.get("file");
@@ -49,12 +55,22 @@ export async function POST(request: Request) {
     );
   }
 
-  await createUploadRecord({
-    repositoryId,
+  const { error: recordError } = await supabase.from("log_uploads").insert({
+    user_id: session.user.id,
+    repository_id: repositoryId,
     filename: file.name,
-    storagePath,
-    contentType: file.type || "text/plain",
+    storage_path: storagePath,
+    content_type: file.type || "text/plain",
   });
+
+  if (recordError) {
+    return NextResponse.json(
+      {
+        message: recordError.message,
+      },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({
     message: "Upload registered.",

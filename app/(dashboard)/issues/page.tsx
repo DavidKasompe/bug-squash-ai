@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Filter, AlertTriangle, ArrowRight, Activity, Cpu, RefreshCw, Upload } from "lucide-react";
+import { AlertTriangle, ArrowRight, Cpu, Filter, RefreshCw, Upload } from "lucide-react";
 import Link from "next/link";
 
 type Bug = {
@@ -20,72 +20,34 @@ type Bug = {
 
 const severityColor: Record<string, string> = {
   Critical: "bg-red-50 text-red-600",
-  High:     "bg-orange-50 text-orange-600",
-  Medium:   "bg-amber-50 text-amber-600",
-  Low:      "bg-blue-50 text-blue-600",
+  High: "bg-orange-50 text-orange-600",
+  Medium: "bg-amber-50 text-amber-600",
+  Low: "bg-blue-50 text-blue-600",
 };
 
 const statusColor: Record<string, string> = {
-  Detected:      "bg-black/[0.05] text-black/50",
+  Detected: "bg-black/[0.05] text-black/50",
   Investigating: "bg-blue-50 text-blue-600",
-  Ready:         "bg-[#2A6948]/10 text-[#2A6948]",
-  Patching:      "bg-amber-50 text-amber-600",
-  Resolved:      "bg-[#2A6948]/10 text-[#2A6948]",
+  Ready: "bg-[#2A6948]/10 text-[#2A6948]",
+  Patching: "bg-amber-50 text-amber-600",
+  Resolved: "bg-[#2A6948]/10 text-[#2A6948]",
 };
 
 const SEVERITIES = ["Critical", "High", "Medium", "Low"];
+const SOURCE_LABELS: Record<string, string> = {
+  chat: "AI chat",
+  upload: "Upload",
+  manual: "Manual",
+  commit_analysis: "Commit analysis",
+  github_webhook: "GitHub webhook",
+  github_actions: "GitHub actions",
+};
 
-// ─── Right Panel: Agent Live Feed ─────────────────────────────────────────────
-function AgentFeedPanel({ bugs }: { bugs: Bug[] }) {
-  const recent = bugs.slice(0, 6);
-  const resolved = bugs.filter(b => b.status === "Resolved").length;
-
-  return (
-    <>
-      <div className="px-5 py-4 border-b border-black/[0.06] flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2.5">
-          <Cpu className="w-4 h-4 text-black/40" />
-          <span className="font-semibold text-sm text-[#111111]">Agent Feed</span>
-          <span className="flex items-center gap-1 bg-[#2A6948]/10 text-[#2A6948] text-[10px] font-bold px-2 py-0.5 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#2A6948] animate-pulse inline-block" />
-            Live
-          </span>
-        </div>
-        <Activity className="w-4 h-4 text-black/30" />
-      </div>
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-        {recent.length === 0 ? (
-          <p className="text-xs text-black/30 text-center py-8">No activity yet. Connect a repo or paste a trace in the dashboard.</p>
-        ) : (
-          recent.map(bug => (
-            <div key={bug.id} className="flex gap-3 p-3 rounded-xl hover:bg-[#F5F4F0] transition-colors">
-              <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${
-                bug.status === "Investigating" ? "bg-[#2A6948] animate-pulse" :
-                bug.status === "Resolved"     ? "bg-black/20" : "bg-amber-400"
-              }`} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-[#111111] leading-snug truncate">{bug.title || "Analyzing…"}</p>
-                <p className="text-xs text-black/40 mt-0.5 font-mono">{bug.status} · {bug.repo.split("/")[1] ?? bug.repo}</p>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-      <div className="px-4 pb-4 pt-2 border-t border-black/[0.06] shrink-0">
-        <div className="bg-[#F5F4F0] rounded-xl p-3 flex items-center justify-between">
-          <span className="text-xs font-medium text-black/60">Resolved bugs</span>
-          <span className="text-sm font-bold text-[#2A6948]">{resolved}</span>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function BugReportsPage() {
   const [bugs, setBugs] = useState<Bug[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState("all");
 
   useEffect(() => {
     let isActive = true;
@@ -125,109 +87,206 @@ export default function BugReportsPage() {
     };
   }, []);
 
-  const displayed = filter ? bugs.filter(b => b.severity === filter) : bugs;
-  const critical  = bugs.filter(b => b.severity === "Critical" || b.severity === "High").length;
-  const ready     = bugs.filter(b => b.status === "Ready").length;
+  const availableSources = Array.from(new Set(bugs.map((bug) => bug.source).filter(Boolean))).sort();
+  const displayed = bugs.filter((bug) => {
+    if (filter && bug.severity !== filter) {
+      return false;
+    }
+
+    if (sourceFilter !== "all" && bug.source !== sourceFilter) {
+      return false;
+    }
+
+    return true;
+  });
+  const critical = bugs.filter((bug) => bug.severity === "Critical" || bug.severity === "High").length;
+  const ready = bugs.filter((bug) => bug.status === "Ready").length;
+  const commitDerived = bugs.filter((bug) => bug.source === "commit_analysis").length;
 
   return (
     <div className="space-y-6 pb-16">
       <div>
-        <p className="text-xs font-mono font-semibold text-black/30 uppercase tracking-[0.15em] mb-2">Mirai / Dashboard</p>
-        <h1 className="text-3xl font-bold tracking-tight text-[#111111] mb-1">Bug reports ready for action</h1>
-        <p className="text-sm text-black/50 max-w-lg">Review detected issues, inspect AI confidence, and move into patch generation.</p>
+        <p className="mb-2 text-xs font-mono font-semibold uppercase tracking-[0.15em] text-black/30">
+          Mirai / Dashboard
+        </p>
+        <h1 className="mb-1 text-3xl font-bold tracking-tight text-[#111111]">
+          Bug reports ready for action
+        </h1>
+        <p className="max-w-lg text-sm text-black/50">
+          Review detected issues, inspect AI confidence, and move into patch generation.
+        </p>
       </div>
 
-      {/* Stats */}
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex flex-wrap gap-3">
         {[
-          { label: "Visible bugs",    value: bugs.length },
+          { label: "Visible bugs", value: bugs.length },
           { label: "Critical + high", value: critical },
           { label: "Ready for patch", value: ready },
-        ].map(s => (
-          <div key={s.label} className="bg-white border border-black/[0.05] rounded-2xl px-5 py-4 min-w-[130px]">
-            <div className="text-xs text-black/40 font-medium mb-1">{s.label}</div>
-            <div className="text-2xl font-bold text-[#111111]">{s.value}</div>
+          { label: "Commit-derived", value: commitDerived },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="min-w-[130px] rounded-2xl border border-black/[0.05] bg-white px-5 py-4"
+          >
+            <div className="mb-1 text-xs font-medium text-black/40">{stat.label}</div>
+            <div className="text-2xl font-bold text-[#111111]">{stat.value}</div>
           </div>
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="bg-white border border-black/[0.05] rounded-2xl px-5 py-4 flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-2 text-xs font-bold text-black/40 mr-2">
-          <Filter className="w-3.5 h-3.5" /> Severity
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-black/[0.05] bg-white px-5 py-4">
+        <div className="mr-2 flex items-center gap-2 text-xs font-bold text-black/40">
+          <Filter className="size-3.5" />
+          Filters
         </div>
-        <button onClick={() => setFilter(null)} className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${!filter ? "border-[#2A6948] bg-[#2A6948]/[0.06] text-[#2A6948]" : "border-black/[0.08] text-black/60 hover:bg-black/[0.03]"}`}>All</button>
-        {SEVERITIES.map(s => (
-          <button key={s} onClick={() => setFilter(f => f === s ? null : s)}
-            className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${filter === s ? "border-[#2A6948] bg-[#2A6948]/[0.06] text-[#2A6948]" : "border-black/[0.08] text-black/60 hover:bg-black/[0.03]"}`}>
-            {s}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-black/35">Severity</span>
+          <button
+            onClick={() => setFilter(null)}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+              !filter
+                ? "border-[#2A6948] bg-[#2A6948]/[0.06] text-[#2A6948]"
+                : "border-black/[0.08] text-black/60 hover:bg-black/[0.03]"
+            }`}
+          >
+            All
           </button>
-        ))}
+          {SEVERITIES.map((severity) => (
+            <button
+              key={severity}
+              onClick={() => setFilter((current) => (current === severity ? null : severity))}
+              className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                filter === severity
+                  ? "border-[#2A6948] bg-[#2A6948]/[0.06] text-[#2A6948]"
+                  : "border-black/[0.08] text-black/60 hover:bg-black/[0.03]"
+              }`}
+            >
+              {severity}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-black/35">Source</span>
+          <select
+            value={sourceFilter}
+            onChange={(event) => setSourceFilter(event.target.value)}
+            className="rounded-lg border border-black/[0.08] bg-white px-3 py-1.5 text-xs font-medium text-black/60 outline-none"
+          >
+            <option value="all">All sources</option>
+            {availableSources.map((source) => (
+              <option key={source} value={source}>
+                {SOURCE_LABELS[source] ?? source}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Upload new trace shortcut */}
-      <Link href="/overview" className="flex items-center gap-3 bg-[#2A6948]/[0.05] border border-[#2A6948]/10 rounded-2xl px-5 py-3.5 hover:bg-[#2A6948]/[0.08] transition-colors">
-        <Upload className="w-4 h-4 text-[#2A6948]" />
-        <span className="text-sm font-semibold text-[#2A6948]">Paste a stack trace in the AI chat to create a new bug</span>
-        <ArrowRight className="w-4 h-4 text-[#2A6948] ml-auto" />
+      <Link
+        href="/overview"
+        className="flex items-center gap-3 rounded-2xl border border-[#2A6948]/10 bg-[#2A6948]/[0.05] px-5 py-3.5 transition-colors hover:bg-[#2A6948]/[0.08]"
+      >
+        <Upload className="size-4 text-[#2A6948]" />
+        <span className="text-sm font-semibold text-[#2A6948]">
+          Paste a stack trace in the AI chat to create a new bug
+        </span>
+        <ArrowRight className="ml-auto size-4 text-[#2A6948]" />
       </Link>
 
-      {/* Bug list */}
       {loading ? (
-        <div className="flex items-center justify-center py-16 gap-2 text-black/30">
-          <RefreshCw className="w-4 h-4 animate-spin" />
+        <div className="flex items-center justify-center gap-2 py-16 text-black/30">
+          <RefreshCw className="size-4 animate-spin" />
           <span className="text-sm">Loading bugs...</span>
         </div>
       ) : displayed.length === 0 ? (
-        <div className="text-center py-16 text-black/30">
-          <Cpu className="w-8 h-8 mx-auto mb-3 opacity-30" />
-          <p className="text-sm font-medium">{filter ? `No ${filter} bugs found` : "No bugs detected yet"}</p>
-          <p className="text-xs mt-1">Connect a GitHub repo or paste a trace in the AI chat to get started.</p>
+        <div className="py-16 text-center text-black/30">
+          <Cpu className="mx-auto mb-3 size-8 opacity-30" />
+          <p className="text-sm font-medium">
+            {filter ? `No ${filter} bugs found` : "No bugs detected yet"}
+          </p>
+          <p className="mt-1 text-xs">
+            Connect a GitHub repo or paste a trace in the AI chat to get started.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {displayed.map(bug => (
-            <div key={bug.id} className="bg-white border border-black/[0.05] rounded-2xl p-6 flex flex-col lg:flex-row gap-6 lg:items-center">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-3 flex-wrap">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${severityColor[bug.severity] ?? "bg-black/[0.05] text-black/40"}`}>{bug.severity}</span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${statusColor[bug.status] ?? "bg-black/[0.05] text-black/40"}`}>
+          {displayed.map((bug) => (
+            <div
+              key={bug.id}
+              className="flex flex-col gap-6 rounded-2xl border border-black/[0.05] bg-white p-6 lg:flex-row lg:items-center"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
+                      severityColor[bug.severity] ?? "bg-black/[0.05] text-black/40"
+                    }`}
+                  >
+                    {bug.severity}
+                  </span>
+                  <span
+                    className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
+                      statusColor[bug.status] ?? "bg-black/[0.05] text-black/40"
+                    }`}
+                  >
                     {bug.status === "Investigating" ? (
-                      <span className="flex items-center gap-1"><span className="w-1 h-1 rounded-full bg-blue-600 animate-pulse inline-block" />{bug.status}</span>
-                    ) : bug.status}
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block size-1 rounded-full bg-blue-600 animate-pulse" />
+                        {bug.status}
+                      </span>
+                    ) : (
+                      bug.status
+                    )}
+                  </span>
+                  <span className="rounded bg-black/[0.04] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-black/45">
+                    {SOURCE_LABELS[bug.source] ?? bug.source}
                   </span>
                   <span className="text-xs font-mono text-black/30">{bug.repo}</span>
                 </div>
-                <h3 className="text-base font-bold text-[#111111] mb-1.5">{bug.title ?? "Analyzing…"}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  {bug.affected_file && (
+                <h3 className="mb-1.5 text-base font-bold text-[#111111]">
+                  {bug.title ?? "Analyzing..."}
+                </h3>
+                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {bug.affected_file ? (
                     <div>
-                      <div className="text-[10px] font-bold text-[#111111] uppercase tracking-widest mb-1">Affected file</div>
-                      <div className="text-xs text-black/40 font-mono">{bug.affected_file}</div>
+                      <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#111111]">
+                        Affected file
+                      </div>
+                      <div className="text-xs font-mono text-black/40">{bug.affected_file}</div>
                     </div>
-                  )}
-                  {bug.affected_function && (
+                  ) : null}
+                  {bug.affected_function ? (
                     <div>
-                      <div className="text-[10px] font-bold text-[#111111] uppercase tracking-widest mb-1">Function</div>
-                      <div className="text-xs text-black/40 font-mono">{bug.affected_function}()</div>
+                      <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#111111]">
+                        Function
+                      </div>
+                      <div className="text-xs font-mono text-black/40">
+                        {bug.affected_function}()
+                      </div>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
-              <div className="lg:w-48 shrink-0 bg-[#F5F4F0] rounded-xl p-5 flex flex-col">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-black/40 uppercase tracking-widest mb-1">
-                  <AlertTriangle className="w-3 h-3 text-[#2A6948]" /> Confidence
+
+              <div className="shrink-0 rounded-xl bg-[#F5F4F0] p-5 lg:w-48">
+                <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-black/40">
+                  <AlertTriangle className="size-3 text-[#2A6948]" />
+                  Confidence
                 </div>
-                <div className="text-3xl font-bold text-[#2A6948] mb-5">
-                  {bug.confidence != null ? `${bug.confidence}%` : "—"}
+                <div className="mb-5 text-3xl font-bold text-[#2A6948]">
+                  {bug.confidence != null ? `${bug.confidence}%` : "--"}
                 </div>
                 {bug.status === "Ready" || bug.status === "Patching" ? (
-                  <Link href={`/issues/${bug.id}`} className="w-full bg-[#2A6948] hover:bg-[#1E4A31] text-white rounded-lg py-2.5 px-4 flex items-center justify-between font-semibold text-xs transition-colors">
-                    Open patch <ArrowRight className="w-3.5 h-3.5" />
+                  <Link
+                    href={`/issues/${bug.id}`}
+                    className="flex w-full items-center justify-between rounded-lg bg-[#2A6948] px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#1E4A31]"
+                  >
+                    Open patch
+                    <ArrowRight className="size-3.5" />
                   </Link>
                 ) : (
-                  <div className="w-full bg-black/[0.04] text-black/30 rounded-lg py-2.5 px-4 text-center font-semibold text-xs">
-                    {bug.status === "Resolved" ? "✓ Resolved" : "Analyzing..."}
+                  <div className="w-full rounded-lg bg-black/[0.04] px-4 py-2.5 text-center text-xs font-semibold text-black/30">
+                    {bug.status === "Resolved" ? "Resolved" : "Analyzing..."}
                   </div>
                 )}
               </div>
@@ -238,6 +297,3 @@ export default function BugReportsPage() {
     </div>
   );
 }
-
-// Export panel for layout
-export { AgentFeedPanel };

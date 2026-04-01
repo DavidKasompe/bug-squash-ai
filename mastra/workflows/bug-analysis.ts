@@ -1,7 +1,6 @@
-import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
 
-import { env } from "@/lib/env";
+import { getGroqModel, isGroqConfigured } from "@/lib/llm";
 
 export type BugAnalysisInput = {
   logSnippet: string;
@@ -16,18 +15,18 @@ export type BugAnalysisResult = {
 };
 
 const bugAnalysisAgent =
-  env.OPENAI_API_KEY
+  isGroqConfigured
     ? new Agent({
         name: "miraiBugAnalysis",
         instructions: `
 You analyze application logs and produce concise engineering output.
-Return:
+        Return:
 - a summary of the issue
 - the most probable root cause
 - the best next action for a developer
-Keep the answer grounded in the provided log snippet and repository context.
+        Keep the answer grounded in the provided log snippet and repository context.
         `.trim(),
-        model: openai("gpt-4o-mini"),
+        model: getGroqModel(),
       })
     : null;
 
@@ -61,6 +60,6 @@ export async function runBugAnalysisWorkflow(input: BugAnalysisInput): Promise<B
   return {
     summary,
     probableCause: "Provider credentials or runtime setup are missing for live Mastra execution.",
-    suggestedNextAction: "Set OPENAI_API_KEY and retry analysis through the Mirai API.",
+    suggestedNextAction: "Set GROQ_API_KEY and retry analysis through the Mirai API.",
   };
 }

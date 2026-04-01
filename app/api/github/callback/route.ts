@@ -12,7 +12,6 @@ const supabase = createClient(
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const installationId = searchParams.get("installation_id");
-  const setupAction    = searchParams.get("setup_action"); // install | update | delete
   const parsedInstallationId = installationId ? parseInt(installationId, 10) : NaN;
 
   if (!installationId || Number.isNaN(parsedInstallationId)) {
@@ -56,7 +55,12 @@ export async function GET(req: Request) {
     }));
 
     const account = installation.account;
-    const accountLogin = account && "login" in account ? account.login : (account as any)?.name ?? "";
+    const accountLogin =
+      account && "login" in account
+        ? account.login
+        : account && "name" in account
+          ? account.name ?? ""
+          : "";
     const accountType  = account && "type"  in account ? account.type  : "Organization";
 
     // Upsert into Supabase

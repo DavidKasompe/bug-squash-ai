@@ -28,13 +28,13 @@ export async function POST(req: Request) {
 
   const payload = JSON.parse(body);
   const installationId = String(payload.installation?.id ?? "");
+  const requestOrigin = new URL(req.url).origin;
 
   // ── A: Workflow run failed → ingest error ──────────────────────────────────
   if (event === "workflow_run" &&
       payload.action === "completed" &&
       payload.workflow_run.conclusion === "failure") {
 
-    const { owner, repo } = payload.repository;
     const repoFullName = payload.repository.full_name;
 
     // Fetch the actual log to extract the stack trace
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
 
     if (bug) {
       // Kick off async AI analysis
-      await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/analyze`, {
+      await fetch(`${requestOrigin}/api/analyze`, {
         method:  "POST",
         headers: {
           "Content-Type":    "application/json",

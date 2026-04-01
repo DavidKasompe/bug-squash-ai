@@ -61,6 +61,22 @@ export async function getDefaultBranch(installationId: string, repo: string): Pr
   return data.default_branch || "main";
 }
 
+export async function listRepositoryBranches(
+  installationId: string,
+  repo: string,
+  limit = 20,
+): Promise<string[]> {
+  const [owner, repoName] = repo.split("/");
+  const octokit = await getOctokit(installationId);
+  const { data } = await octokit.repos.listBranches({
+    owner,
+    repo: repoName,
+    per_page: Math.min(Math.max(limit, 1), 100),
+  });
+
+  return data.map((branch) => branch.name);
+}
+
 // ─── Fetch file content from a repo ──────────────────────────────────────────
 export async function fetchFileFromGitHub(
   installationId: string,
@@ -85,6 +101,93 @@ export async function fetchFileFromGitHub(
     };
   }
   throw new Error(`${filePath} is not a file in ${repo}`);
+}
+
+type RepositoryFileCandidate = {
+  path: string;
+  score: number;
+};
+
+export async function findRepositoryFileCandidates(
+  installationId: string,
+  repo: string,
+  ref = "main",
+  targetPath?: string | null,
+): Promise<string[]> {
+  const [owner, repoName] = repo.split("/");
+  const octokit = await getOctokit(installationId);
+  const normalizedTarget = targetPath?.replace(/^\.?\//, "").toLowerCase() ?? "";
+  const targetSegments = normalizedTarget.split("/").filter(Boolean);
+  const targetBaseName = targetSegments[targetSegments.length - 1] ?? "";
+
+  const { data } = await octokit.git.getTree({
+    owner,
+    repo: repoName,
+    tree_sha: ref,
+    recursive: "true",
+  });
+
+  const candidates = (data.tree ?? [])
+    .filter((entry) => entry.type === "blob" && typeof entry.path === "string")
+    .map((entry) => {
+      const path = entry.path!;
+      const normalizedPath = path.toLowerCase();
+      let score = 0;
+
+      if (normalizedTarget && normalizedPath === normalizedTarget) {
+        score += 100;
+      }
+
+      if (targetBaseName && normalizedPath.endsWith(targetBaseName)) {
+        score += 60;
+      }
+
+      for (const segment of targetSegments) {
+        if (segment && normalizedPath.includes(segment)) {
+          score += 10;
+        }
+      }
+
+      return {
+        path,
+        score,
+      } satisfies RepositoryFileCandidate;
+    })
+    .filter((candidate) => candidate.score > 0)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 5)
+    .map((candidate) => candidate.path);
+
+  return candidates;
+}
+
+export async function resolveRepositoryFilePath(
+  installationId: string,
+  repo: string,
+  filePath: string,
+  ref = "main",
+): Promise<{
+  path: string | null;
+  candidates: string[];
+}> {
+  try {
+    await fetchFileFromGitHub(installationId, repo, filePath, ref);
+    return { path: filePath, candidates: [] };
+  } catch {
+    const candidates = await findRepositoryFileCandidates(installationId, repo, ref, filePath);
+
+    if (candidates.length === 1) {
+      return {
+        path: candidates[0],
+        candidates,
+      };
+    }
+
+    return {
+      path: null,
+      candidates,
+    };
+  }
 }
 
 // ─── Fetch workflow run logs ──────────────────────────────────────────────────
@@ -236,4 +339,191 @@ export async function listInstallationRepos(installationId: string) {
     language: r.language,
     updated_at: r.updated_at,
   }));
+}
+
+export type CommitFileAnalysis = {
+  commitSha?: string;
+  filename: string;
+  status?: string;
+  additions?: number;
+  deletions?: number;
+  changes?: number;
+  patch?: string;
+  content?: string;
+};
+
+export type CommitSummary = {
+  sha: string;
+  message: string;
+  author: string;
+  committedAt: string;
+  url: string;
+};
+
+export type CommitAnalysisContext = {
+  sha: string;
+  branch: string;
+  message: string;
+  author: string;
+  committedAt: string;
+  url: string;
+  stats: {
+    additions: number;
+    deletions: number;
+    total: number;
+  };
+  commits: CommitSummary[];
+  files: CommitFileAnalysis[];
+};
+
+async function buildCommitAnalysisContextFromSha(
+  installationId: string,
+  repo: string,
+  targetBranch: string,
+  commitSha: string,
+): Promise<CommitAnalysisContext> {
+  const [owner, repoName] = repo.split("/");
+  const octokit = await getOctokit(installationId);
+
+  const { data: detailedCommit } = await octokit.repos.getCommit({
+    owner,
+    repo: repoName,
+    ref: commitSha,
+  });
+
+  const textFilePattern = /\.(ts|tsx|js|jsx|json|md|py|java|kt|go|rb|rs|php|cs|swift|yml|yaml|toml|env|ini|sh|sql)$/i;
+  const contentCandidates = (detailedCommit.files ?? [])
+    .filter((file) => file.status !== "removed" && !!file.filename && textFilePattern.test(file.filename))
+    .sort((left, right) => {
+      const leftPatchScore = left.patch ? left.patch.length : 0;
+      const rightPatchScore = right.patch ? right.patch.length : 0;
+      return rightPatchScore - leftPatchScore;
+    })
+    .slice(0, 3);
+
+  const contentByFile = new Map<string, string>();
+  await Promise.all(
+    contentCandidates.map(async (file) => {
+      try {
+        const result = await fetchFileFromGitHub(installationId, repo, file.filename, detailedCommit.sha);
+        contentByFile.set(file.filename, result.content);
+      } catch {
+        // Some files in a commit may be binary, renamed, or otherwise unavailable as plain text.
+      }
+    }),
+  );
+
+  return {
+    sha: detailedCommit.sha,
+    branch: targetBranch,
+    message: detailedCommit.commit.message,
+    author: detailedCommit.commit.author?.name ?? "unknown",
+    committedAt: detailedCommit.commit.author?.date ?? "",
+    url: detailedCommit.html_url,
+    stats: {
+      additions: detailedCommit.stats?.additions ?? 0,
+      deletions: detailedCommit.stats?.deletions ?? 0,
+      total: detailedCommit.stats?.total ?? 0,
+    },
+    commits: [
+      {
+        sha: detailedCommit.sha,
+        message: detailedCommit.commit.message,
+        author: detailedCommit.commit.author?.name ?? "unknown",
+        committedAt: detailedCommit.commit.author?.date ?? "",
+        url: detailedCommit.html_url,
+      },
+    ],
+    files: (detailedCommit.files ?? []).map((file) => ({
+      commitSha: detailedCommit.sha,
+      filename: file.filename,
+      status: file.status,
+      additions: file.additions,
+      deletions: file.deletions,
+      changes: file.changes,
+      patch: file.patch,
+      content: contentByFile.get(file.filename),
+    })),
+  };
+}
+
+export async function getLatestCommitAnalysisContext(
+  installationId: string,
+  repo: string,
+  branch?: string,
+): Promise<CommitAnalysisContext> {
+  const [owner, repoName] = repo.split("/");
+  const octokit = await getOctokit(installationId);
+  const targetBranch = branch ?? (await getDefaultBranch(installationId, repo));
+
+  const { data: commits } = await octokit.repos.listCommits({
+    owner,
+    repo: repoName,
+    sha: targetBranch,
+    per_page: 1,
+  });
+
+  const latestCommit = commits[0];
+  if (!latestCommit) {
+    throw new Error(`No commits found for ${repo} on ${targetBranch}.`);
+  }
+
+  return buildCommitAnalysisContextFromSha(installationId, repo, targetBranch, latestCommit.sha);
+}
+
+export async function getCommitAnalysisContext(
+  installationId: string,
+  repo: string,
+  ref: string,
+  branch?: string,
+): Promise<CommitAnalysisContext> {
+  const targetBranch = branch ?? (await getDefaultBranch(installationId, repo));
+  return buildCommitAnalysisContextFromSha(installationId, repo, targetBranch, ref);
+}
+
+export async function getRecentCommitAnalysisContext(
+  installationId: string,
+  repo: string,
+  count: number,
+  branch?: string,
+): Promise<CommitAnalysisContext> {
+  const [owner, repoName] = repo.split("/");
+  const octokit = await getOctokit(installationId);
+  const targetBranch = branch ?? (await getDefaultBranch(installationId, repo));
+  const normalizedCount = Math.min(Math.max(count, 1), 3);
+
+  const { data: commits } = await octokit.repos.listCommits({
+    owner,
+    repo: repoName,
+    sha: targetBranch,
+    per_page: normalizedCount,
+  });
+
+  if (commits.length === 0) {
+    throw new Error(`No commits found for ${repo} on ${targetBranch}.`);
+  }
+
+  const contexts = await Promise.all(
+    commits.map((commit) => buildCommitAnalysisContextFromSha(installationId, repo, targetBranch, commit.sha)),
+  );
+
+  const latest = contexts[0];
+  return {
+    sha: latest.sha,
+    branch: targetBranch,
+    message: `Recent ${contexts.length}-commit audit`,
+    author: latest.author,
+    committedAt: latest.committedAt,
+    url: latest.url,
+    stats: contexts.reduce(
+      (acc, context) => ({
+        additions: acc.additions + context.stats.additions,
+        deletions: acc.deletions + context.stats.deletions,
+        total: acc.total + context.stats.total,
+      }),
+      { additions: 0, deletions: 0, total: 0 },
+    ),
+    commits: contexts.flatMap((context) => context.commits),
+    files: contexts.flatMap((context) => context.files),
+  };
 }
