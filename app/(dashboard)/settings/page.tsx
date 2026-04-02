@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User, Bell, Shield, Github, CreditCard, Trash2, CheckCircle2, ChevronRight } from "lucide-react";
 
 const sections = [
@@ -62,6 +62,35 @@ function Toggle({ defaultOn = false, label }: { defaultOn?: boolean; label: stri
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("profile");
   const [saved, setSaved] = useState(false);
+  const [emailConfigured, setEmailConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadNotificationStatus = async () => {
+      try {
+        const response = await fetch("/api/notifications/status");
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json() as { emailConfigured?: boolean };
+        if (!cancelled) {
+          setEmailConfigured(Boolean(data.emailConfigured));
+        }
+      } catch {
+        if (!cancelled) {
+          setEmailConfigured(false);
+        }
+      }
+    };
+
+    void loadNotificationStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSave = () => {
     setSaved(true);
@@ -127,8 +156,32 @@ export default function SettingsPage() {
 
           {activeSection === "notifications" && (
             <SectionCard title="Notifications" desc="Choose when and how Mirai notifies you.">
+              <div className="rounded-2xl border border-black/[0.06] bg-[#F5F4F0] px-4 py-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-[#111111]">Email delivery status</p>
+                    <p className="text-xs text-black/45 mt-1">
+                      {emailConfigured === null
+                        ? "Checking Mirai Debug Bot email delivery status."
+                        : emailConfigured
+                        ? "Mirai Debug Bot email delivery is configured. PR-opened notifications can be sent from the app."
+                        : "Mirai Debug Bot email delivery is not configured yet. Add RESEND_API_KEY and EMAIL_FROM to enable outbound app emails."}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold ${
+                    emailConfigured === null
+                      ? "bg-black/10 text-black/50"
+                      : emailConfigured
+                      ? "bg-[#2A6948]/10 text-[#2A6948]"
+                      : "bg-amber-100 text-amber-700"
+                  }`}>
+                    {emailConfigured === null ? "Checking" : emailConfigured ? "Configured" : "Missing config"}
+                  </span>
+                </div>
+              </div>
               <div className="space-y-4">
                 <Toggle defaultOn label="Email me when a Critical bug is detected" />
+                <Toggle defaultOn label="Email me when Mirai opens a pull request" />
                 <Toggle defaultOn label="Email me when a patch is ready to merge" />
                 <Toggle label="Send weekly bug digest on Mondays" />
                 <Toggle defaultOn label="Notify me when a workflow fails" />

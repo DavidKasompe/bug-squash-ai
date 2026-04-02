@@ -15,6 +15,9 @@ const envSchema = z.object({
   GROQ_MODEL: z.string().default("llama-3.1-8b-instant"),
   GITHUB_CLIENT_ID: z.string().optional(),
   GITHUB_CLIENT_SECRET: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().optional(),
+  EMAIL_REPLY_TO: z.string().optional(),
 });
 
 export const env = envSchema.parse({
@@ -32,4 +35,7 @@ export const env = envSchema.parse({
   GROQ_MODEL: process.env.GROQ_MODEL,
   GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
   GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  EMAIL_FROM: process.env.EMAIL_FROM,
+  EMAIL_REPLY_TO: process.env.EMAIL_REPLY_TO,
 });

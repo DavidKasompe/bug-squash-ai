@@ -12,6 +12,7 @@ import {
   resolveRepositoryFilePath,
 } from "@/lib/github";
 import { buildPRBody } from "@/lib/prompts";
+import { isEmailConfigured, sendPullRequestOpenedEmail } from "@/lib/email";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -335,6 +336,27 @@ export async function POST(
       affectedFile,
       sessionUserId: session.user.id,
     });
+
+    if (session.user.email && isEmailConfigured()) {
+      try {
+        await sendPullRequestOpenedEmail({
+          to: session.user.email,
+          recipientName: session.user.name,
+          repo,
+          bugTitle: bug.title,
+          severity: bug.severity,
+          confidence: bug.confidence,
+          rootCause: bug.root_cause,
+          fixSteps: bug.fix_steps,
+          prUrl,
+          prNumber,
+          branchName,
+          affectedFile: finalFilePath,
+        });
+      } catch (emailError) {
+        console.warn("[create-pr:email]", emailError);
+      }
+    }
 
     return Response.json({ ok: true, pr_url: prUrl, pr_number: prNumber, branch: branchName });
   } catch (err: unknown) {
