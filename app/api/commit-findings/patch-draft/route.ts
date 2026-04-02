@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { generateText } from "ai";
-import { applyPatch } from "diff";
+import { applyPatch, createTwoFilesPatch } from "diff";
 
 import { getServerSession } from "@/lib/auth";
 import { fetchFileFromGitHub } from "@/lib/github";
 import { getGroqModel, isGroqConfigured } from "@/lib/llm";
 import {
   COMMIT_FINDING_PATCH_SYSTEM_PROMPT,
-  parseAnalysisResponse,
+  parseCommitFindingPatchDraftResponse,
 } from "@/lib/prompts";
 import { createSupabaseAdminClient, isSupabaseConfigured } from "@/lib/supabase/admin";
 
@@ -124,6 +124,20 @@ function getApplicableDiff(currentContent: string, diffText: string) {
   }
 
   return null;
+}
+
+function buildUnifiedDiff(filePath: string, currentContent: string, updatedContent: string) {
+  const patch = createTwoFilesPatch(
+    `a/${filePath}`,
+    `b/${filePath}`,
+    currentContent,
+    updatedContent,
+    "",
+    "",
+    { context: 3 },
+  );
+
+  return patch.trim();
 }
 
 export async function POST(request: Request) {
@@ -249,12 +263,24 @@ export async function POST(request: Request) {
       prompt: analysisPrompt,
     });
 
-    let parsed = parseAnalysisResponse(text);
+    let parsed = parseCommitFindingPatchDraftResponse(text);
     if (!parsed) {
       throw new Error("Failed to parse AI response.");
     }
 
-    if (parsed.diff && currentFileContent) {
+    if (parsed.updated_file && currentFileContent) {
+      const derivedDiff = buildUnifiedDiff(
+        parsed.affected_file ?? file ?? "file",
+        currentFileContent,
+        parsed.updated_file,
+      );
+      const applicableDiff = getApplicableDiff(currentFileContent, derivedDiff);
+
+      parsed = {
+        ...parsed,
+        diff: applicableDiff,
+      };
+    } else if (parsed.diff && currentFileContent) {
       const applicableDiff = getApplicableDiff(currentFileContent, parsed.diff);
 
       if (applicableDiff) {
@@ -277,11 +303,19 @@ export async function POST(request: Request) {
           prompt: correctionPrompt,
         });
 
-        const correctedParsed = parseAnalysisResponse(correctedText);
-        const correctedDiff =
-          correctedParsed?.diff && currentFileContent
-            ? getApplicableDiff(currentFileContent, correctedParsed.diff)
-            : null;
+        const correctedParsed = parseCommitFindingPatchDraftResponse(correctedText);
+        let correctedDiff: string | null = null;
+
+        if (correctedParsed?.updated_file && currentFileContent) {
+          const derivedDiff = buildUnifiedDiff(
+            correctedParsed.affected_file ?? file ?? "file",
+            currentFileContent,
+            correctedParsed.updated_file,
+          );
+          correctedDiff = getApplicableDiff(currentFileContent, derivedDiff);
+        } else if (correctedParsed?.diff && currentFileContent) {
+          correctedDiff = getApplicableDiff(currentFileContent, correctedParsed.diff);
+        }
 
         if (correctedParsed) {
           parsed = {

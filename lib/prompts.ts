@@ -55,6 +55,19 @@ export interface AnalysisResult {
   tests: string[];
 }
 
+export interface CommitFindingPatchDraftResult {
+  title: string;
+  severity: "Critical" | "High" | "Medium" | "Low";
+  confidence: number;
+  root_cause: string;
+  fix_steps: string[];
+  affected_file: string | null;
+  affected_function: string | null;
+  updated_file: string | null;
+  diff: string | null;
+  tests: string[];
+}
+
 export interface CommitAnalysisResult {
   type: "commit-analysis";
   title: string;
@@ -175,16 +188,17 @@ You will receive:
 Your job is to:
 1. Explain the root cause precisely and conservatively.
 2. Produce a minimal, safe fix.
-3. Generate a valid unified diff against the EXACT current file content.
+3. Produce the COMPLETE updated file content for the target file after the fix.
 4. Keep the patch scoped to the requested affected file unless there is overwhelming evidence another file is required.
-5. If the fix cannot be made safely from the provided file content, set "diff" to null instead of guessing.
+5. If the fix cannot be made safely from the provided file content, set both "updated_file" and "diff" to null instead of guessing.
 
-Diff requirements:
+Patch requirements:
 - Use the exact affected file path provided by the user/context.
-- The patch must apply cleanly to the current file content.
-- Hunk headers must be accurate.
-- Do not invent surrounding lines that are not present in the provided file snapshot.
+- The updated file must preserve all unrelated code exactly as-is.
+- Only make the smallest safe edits needed.
+- Do not omit unchanged sections.
 - Prefer a small patch over a broad refactor.
+- Treat "updated_file" as the source of truth. "diff" is optional and may be null.
 
 Respond ONLY with this exact JSON structure, no markdown wrapping:
 {
@@ -199,7 +213,8 @@ Respond ONLY with this exact JSON structure, no markdown wrapping:
   ],
   "affected_file": "frontend/src/contexts/AuthContext.tsx",
   "affected_function": "parseUserData",
-  "diff": "--- a/frontend/src/contexts/AuthContext.tsx\\n+++ b/frontend/src/contexts/AuthContext.tsx\\n@@ -1,3 +1,4 @@\\n ...",
+  "updated_file": "complete updated file contents here",
+  "diff": null,
   "tests": [
     "should ...",
     "should ...",
@@ -207,7 +222,35 @@ Respond ONLY with this exact JSON structure, no markdown wrapping:
   ]
 }
 
-If you cannot generate a safe diff that matches the provided file snapshot, set "diff" to null.`;
+If you cannot generate a safe full-file update that matches the provided file snapshot, set both "updated_file" and "diff" to null.`;
+
+export function parseCommitFindingPatchDraftResponse(
+  text: string,
+): CommitFindingPatchDraftResult | null {
+  try {
+    const cleaned = text.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "").trim();
+    const parsed = JSON.parse(cleaned);
+
+    if (!parsed.title || !parsed.severity || typeof parsed.confidence !== "number") {
+      return null;
+    }
+
+    return {
+      title: parsed.title,
+      severity: parsed.severity,
+      confidence: Math.min(100, Math.max(0, parsed.confidence)),
+      root_cause: parsed.root_cause || "",
+      fix_steps: Array.isArray(parsed.fix_steps) ? parsed.fix_steps : [],
+      affected_file: parsed.affected_file || null,
+      affected_function: parsed.affected_function || null,
+      updated_file: typeof parsed.updated_file === "string" ? parsed.updated_file : null,
+      diff: typeof parsed.diff === "string" ? parsed.diff : null,
+      tests: Array.isArray(parsed.tests) ? parsed.tests : [],
+    };
+  } catch {
+    return null;
+  }
+}
 
 function normalizeCommitFindings(value: unknown): CommitAnalysisFinding[] {
   if (!Array.isArray(value)) {
