@@ -1,4 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import type { LanguageModelV1 } from "ai";
 
 import { env } from "@/lib/env";
 
@@ -9,7 +10,6 @@ const groq = createOpenAI({
   baseURL: env.GROQ_BASE_URL,
 });
 
-export function getGroqModel() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return groq(env.GROQ_MODEL) as any;
+export function getGroqModel(): LanguageModelV1 {
+  return groq(env.GROQ_MODEL) as LanguageModelV1;
 }

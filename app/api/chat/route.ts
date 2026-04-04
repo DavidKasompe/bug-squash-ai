@@ -239,9 +239,11 @@ export async function POST(req: Request) {
 
     try {
       const { text } = await generateText({
-        model: getGroqModel(),
-        system: systemPrompt,
-        prompt: userPrompt,
+        model:       getGroqModel(),
+        system:      systemPrompt,
+        prompt:      userPrompt,
+        maxTokens:   8_000,
+        abortSignal: AbortSignal.timeout(45_000),
       });
       const parsedCommitAnalysis = parseCommitAnalysisResponse(text);
 
@@ -311,9 +313,11 @@ export async function POST(req: Request) {
   let result;
   try {
     result = await streamText({
-      model: getGroqModel(),
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
+      model:       getGroqModel(),
+      system:      systemPrompt,
+      messages:    [{ role: "user", content: userPrompt }],
+      maxTokens:   8_000,
+      abortSignal: AbortSignal.timeout(45_000),
       onFinish: async ({ text }) => {
         const parsed = parseAnalysisResponse(text);
 

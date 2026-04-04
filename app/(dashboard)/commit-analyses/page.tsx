@@ -191,15 +191,15 @@ export default function CommitAnalysesPage() {
         </div>
         <div className="rounded-2xl border border-black/[0.05] bg-white p-5">
           <p className="text-[10px] font-bold uppercase tracking-widest text-black/35">Linked Issues</p>
-          <p className="mt-3 text-4xl font-bold tracking-tight text-[#111111]">{summary.linkedIssues}</p>
+          <p className="mt-3 text-4xl font-bold tracking-tight text-[#2A6948]">{summary.linkedIssues}</p>
         </div>
-        <div className="rounded-2xl border border-black/[0.05] bg-white p-5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-black/35">Confirmed Findings</p>
-          <p className="mt-3 text-4xl font-bold tracking-tight text-[#111111]">{summary.confirmed}</p>
+        <div className="rounded-2xl border border-red-50 bg-white p-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-red-400">Confirmed Findings</p>
+          <p className="mt-3 text-4xl font-bold tracking-tight text-red-600">{summary.confirmed}</p>
         </div>
-        <div className="rounded-2xl border border-black/[0.05] bg-white p-5">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-black/35">Potential Findings</p>
-          <p className="mt-3 text-4xl font-bold tracking-tight text-[#111111]">{summary.potential}</p>
+        <div className="rounded-2xl border border-amber-50 bg-white p-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Potential Findings</p>
+          <p className="mt-3 text-4xl font-bold tracking-tight text-amber-600">{summary.potential}</p>
         </div>
       </div>
 
@@ -271,17 +271,21 @@ export default function CommitAnalysesPage() {
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="rounded-xl bg-[#F5F4F0] px-3 py-2 text-xs text-black/55">
-                    Confirmed:{" "}
-                    <span className="font-bold text-[#111111]">
-                      {analysis.confirmed_errors_count ?? "n/a"}
-                    </span>
+                  <div className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                    (analysis.confirmed_errors_count ?? 0) > 0
+                      ? "bg-red-50 text-red-600"
+                      : "bg-[#F5F4F0] text-black/40"
+                  }`}>
+                    <span className="font-bold">{analysis.confirmed_errors_count ?? 0}</span>
+                    {" "}confirmed
                   </div>
-                  <div className="rounded-xl bg-[#F5F4F0] px-3 py-2 text-xs text-black/55">
-                    Potential:{" "}
-                    <span className="font-bold text-[#111111]">
-                      {analysis.potential_errors_count ?? "n/a"}
-                    </span>
+                  <div className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                    (analysis.potential_errors_count ?? 0) > 0
+                      ? "bg-amber-50 text-amber-600"
+                      : "bg-[#F5F4F0] text-black/40"
+                  }`}>
+                    <span className="font-bold">{analysis.potential_errors_count ?? 0}</span>
+                    {" "}potential
                   </div>
                 </div>
               </div>

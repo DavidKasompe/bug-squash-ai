@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { extractStackTrace, fetchWorkflowLogs } from "@/lib/github";
 
@@ -11,9 +11,11 @@ function verifySignature(body: string, signature: string): boolean {
   const expected = `sha256=${createHmac("sha256", process.env.GITHUB_WEBHOOK_SECRET!)
     .update(body)
     .digest("hex")}`;
-  // Constant-time comparison
-  return expected.length === signature.length &&
-    expected.split("").every((c, i) => c === signature[i]);
+  try {
+    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  } catch {
+    return false;
+  }
 }
 
 export async function POST(req: Request) {

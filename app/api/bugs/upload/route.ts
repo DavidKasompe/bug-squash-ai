@@ -25,13 +25,20 @@ export async function POST(req: Request) {
 
   if (error || !bug) return Response.json({ error: "Failed to create bug" }, { status: 500 });
 
-  // Kick off async analysis
+  // Mark as Analyzing immediately so the UI reflects the work-in-progress state
+  await supabase.from("bugs").update({ status: "Investigating" }).eq("id", bug.id);
+
+  // Kick off analysis — best-effort, non-blocking; failure resets status to Detected
   const requestOrigin = new URL(req.url).origin;
   fetch(`${requestOrigin}/api/analyze`, {
     method:  "POST",
     headers: { "Content-Type": "application/json", "x-internal-key": process.env.INTERNAL_API_KEY! },
     body:    JSON.stringify({ bugId: bug.id, stackTrace: trace }),
-  }).catch(console.error);
+  }).catch(async (err) => {
+    console.error("[bugs/upload] analysis kick-off failed:", err);
+    // Reset status so user can retry
+    await supabase.from("bugs").update({ status: "Detected" }).eq("id", bug.id);
+  });
 
-  return Response.json({ bugId: bug.id });
+  return Response.json({ bugId: bug.id, status: "Investigating" });
 }

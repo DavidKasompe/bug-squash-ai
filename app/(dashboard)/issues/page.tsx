@@ -273,9 +273,19 @@ export default function BugReportsPage() {
                   <AlertTriangle className="size-3 text-[#2A6948]" />
                   Confidence
                 </div>
-                <div className="mb-5 text-3xl font-bold text-[#2A6948]">
+                <div className="mb-3 text-3xl font-bold text-[#2A6948]">
                   {bug.confidence != null ? `${bug.confidence}%` : "--"}
                 </div>
+                {bug.confidence != null ? (
+                  <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-black/[0.07]">
+                    <div
+                      className="h-full rounded-full bg-[#2A6948] transition-all"
+                      style={{ width: `${bug.confidence}%` }}
+                    />
+                  </div>
+                ) : (
+                  <div className="mb-4 h-1.5 w-full rounded-full bg-black/[0.07]" />
+                )}
                 {bug.status === "Ready" || bug.status === "Patching" ? (
                   <Link
                     href={`/issues/${bug.id}`}
