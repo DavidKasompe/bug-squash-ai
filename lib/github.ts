@@ -9,6 +9,23 @@ const supabase = createClient(
 
 // ─── Get a fresh installation access token ────────────────────────────────────
 export async function getInstallationToken(installationId: string): Promise<string> {
+  // OAuth path: virtual installationId like "oauth:<userId>"
+  if (installationId.startsWith("oauth:")) {
+    const userId = installationId.slice(6);
+    const { data, error } = await supabase
+      .from("account")
+      .select("accessToken")
+      .eq("userId", userId)
+      .eq("providerId", "github")
+      .single();
+
+    if (error || !data?.accessToken) {
+      throw new Error("No GitHub OAuth token found for user. Please sign in with GitHub.");
+    }
+    return data.accessToken as string;
+  }
+
+  // GitHub App path: real numeric installationId
   // Check Supabase cache first
   const { data } = await supabase
     .from("installations")
@@ -330,14 +347,33 @@ export async function mergePullRequest(
 // ─── List repos accessible to an installation ─────────────────────────────────
 export async function listInstallationRepos(installationId: string) {
   const octokit = await getOctokit(installationId);
+
+  // OAuth token: list repos the authenticated user owns / has access to
+  if (installationId.startsWith("oauth:")) {
+    const { data } = await octokit.repos.listForAuthenticatedUser({
+      per_page: 100,
+      sort: "updated",
+      affiliation: "owner,collaborator,organization_member",
+    });
+    return data.map(r => ({
+      id: r.id,
+      name: r.name,
+      full_name: r.full_name,
+      private: r.private,
+      language: r.language ?? null,
+      updated_at: r.updated_at ?? null,
+    }));
+  }
+
+  // GitHub App installation token
   const { data } = await octokit.apps.listReposAccessibleToInstallation({ per_page: 100 });
   return data.repositories.map(r => ({
     id: r.id,
     name: r.name,
     full_name: r.full_name,
     private: r.private,
-    language: r.language,
-    updated_at: r.updated_at,
+    language: r.language ?? null,
+    updated_at: r.updated_at ?? null,
   }));
 }
 

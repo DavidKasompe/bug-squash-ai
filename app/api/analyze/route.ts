@@ -38,11 +38,13 @@ export async function POST(req: Request) {
     // Mark bug as Investigating
     await supabase.from("bugs").update({ status: "Investigating" }).eq("id", bugId);
 
-    // Run AI analysis
+    // Run AI analysis (capped at 8 000 tokens, 45 s hard timeout)
     const { text } = await generateText({
-      model:  getGroqModel(),
-      system: ANALYSIS_SYSTEM_PROMPT,
-      prompt: stackTrace,
+      model:     getGroqModel(),
+      system:    ANALYSIS_SYSTEM_PROMPT,
+      prompt:    stackTrace.slice(0, 12_000), // guard against huge traces
+      maxTokens: 2_000,
+      abortSignal: AbortSignal.timeout(45_000),
     });
 
     const parsed = parseAnalysisResponse(text);

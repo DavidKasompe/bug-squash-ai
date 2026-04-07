@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, ArrowLeft, FileCode2, TestTube2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, FileCode2, ListChecks, TestTube2 } from "lucide-react";
 
 import { CreatePrButton } from "@/components/mirai/create-pr-button";
 import { getServerSession } from "@/lib/auth";
@@ -202,15 +202,48 @@ export default async function IssueDetailPage({
         </div>
       ) : null}
 
+      {(bug.fix_steps ?? []).length > 0 ? (
+        <div className="rounded-2xl border border-black/[0.05] bg-white p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <ListChecks className="size-4 text-[#2A6948]" />
+            <h2 className="text-sm font-semibold text-[#111111]">Fix steps</h2>
+          </div>
+          <div className="space-y-3">
+            {(bug.fix_steps ?? []).map((step, index) => (
+              <div key={index} className="flex items-start gap-3">
+                <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#2A6948]/10 text-[10px] font-bold text-[#2A6948]">
+                  {index + 1}
+                </div>
+                <p className="text-sm leading-relaxed text-black/65">{step}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="rounded-2xl border border-black/[0.05] bg-white p-6">
         <div className="flex items-center gap-2">
           <FileCode2 className="size-4 text-black/40" />
           <h2 className="text-sm font-semibold text-[#111111]">Patch preview</h2>
         </div>
         {patch?.diff ? (
-          <pre className="mt-4 overflow-x-auto rounded-2xl bg-[#111111] p-4 text-xs leading-6 text-white/80">
-            {patch.diff}
-          </pre>
+          <div className="mt-4 overflow-hidden rounded-2xl bg-[#111111]">
+            {patch.diff.split("\n").map((line, i) => {
+              const cls =
+                line.startsWith("+") && !line.startsWith("+++")
+                  ? "bg-[#2A6948]/10 text-[#5fba87]"
+                  : line.startsWith("-") && !line.startsWith("---")
+                    ? "bg-red-500/10 text-red-400"
+                    : line.startsWith("@@")
+                      ? "text-blue-400/60"
+                      : "text-white/35";
+              return (
+                <div key={i} className={`px-4 py-0.5 font-mono text-xs leading-6 ${cls}`}>
+                  {line || "\u00A0"}
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <p className="mt-4 text-sm text-black/40">No patch diff available yet.</p>
         )}

@@ -9,12 +9,12 @@ import {
   Brain,
   Bug,
   CheckCircle2,
-  ChevronUp,
   GitBranch,
   HelpCircle,
   Key,
   LayoutDashboard,
   Loader2,
+  LogOut,
   Search,
   Send,
   Settings,
@@ -22,6 +22,7 @@ import {
   Wifi,
   Zap,
 } from "lucide-react";
+import { useSession, signOut } from "@/lib/auth-client";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/overview" },
@@ -34,8 +35,19 @@ const navItems = [
 ] as const;
 
 function Sidebar({ pathname }: { pathname: string }) {
+  const { data: session } = useSession();
+  const userName = session?.user?.name ?? "User";
+  const userEmail = session?.user?.email ?? "";
+  const initials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <aside className="sticky top-0 z-30 flex h-screen w-[240px] shrink-0 flex-col border-r border-black/[0.06] bg-white">
+      {/* Logo area */}
       <div className="px-4 pb-3 pt-5">
         <Link href="/" className="mb-5 flex items-center gap-2.5">
           <div className="flex gap-[2px]">
@@ -44,13 +56,14 @@ function Sidebar({ pathname }: { pathname: string }) {
           </div>
           <span className="text-[17px] font-bold tracking-tight text-[#111111]">Mirai</span>
         </Link>
-        <button className="flex w-full items-center gap-2.5 rounded-xl bg-[#F5F4F0] px-3 py-2 text-sm text-black/40 transition-colors hover:bg-black/5">
+        <button className="flex w-full items-center gap-2.5 rounded-xl bg-[#F5F4F0] px-3 py-2 text-sm text-black/40 transition-colors hover:bg-black/[0.06]">
           <Search className="size-3.5 shrink-0" />
           <span className="flex-1 text-left text-xs">Search...</span>
-          <kbd className="rounded bg-black/10 px-1.5 py-0.5 font-mono text-[10px] font-bold">Cmd+K</kbd>
+          <kbd className="rounded bg-black/10 px-1.5 py-0.5 font-mono text-[10px] font-bold">⌘K</kbd>
         </button>
       </div>
 
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 py-2">
         <div className="space-y-0.5">
           {navItems.map(({ icon: Icon, label, href }) => {
@@ -62,48 +75,57 @@ function Sidebar({ pathname }: { pathname: string }) {
                 className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                   active
                     ? "bg-[#2A6948]/10 font-semibold text-[#2A6948]"
-                    : "text-black/60 hover:bg-black/[0.04] hover:text-[#111111]"
+                    : "text-black/55 hover:bg-black/[0.04] hover:text-[#111111]"
                 }`}
               >
                 <Icon
-                  className={`size-4 shrink-0 ${
-                    active ? "text-[#2A6948]" : "text-black/40 group-hover:text-black/60"
+                  className={`size-4 shrink-0 transition-colors ${
+                    active ? "text-[#2A6948]" : "text-black/35 group-hover:text-black/55"
                   }`}
                 />
                 {label}
-                {active ? <div className="ml-auto size-1.5 rounded-full bg-[#2A6948]" /> : null}
+                {active ? (
+                  <div className="ml-auto size-1.5 rounded-full bg-[#2A6948]" />
+                ) : null}
               </Link>
             );
           })}
         </div>
       </nav>
 
-      <div className="space-y-0.5 border-t border-black/[0.06] px-2 pb-4 pt-3">
-        <Link
-          href="/settings"
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-black/60 transition-all hover:bg-black/[0.04] hover:text-[#111111]"
-        >
-          <Settings className="size-4 text-black/40" />
-          Settings
-        </Link>
-        <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-black/60 transition-all hover:bg-black/[0.04] hover:text-[#111111]">
-          <HelpCircle className="size-4 text-black/40" />
-          Help
-        </button>
-        <div className="mt-2 border-t border-black/[0.06] pt-2">
+      {/* Bottom section */}
+      <div className="border-t border-black/[0.06] px-2 pb-4 pt-3">
+        <div className="space-y-0.5">
           <Link
             href="/settings"
-            className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:bg-black/[0.04]"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-black/55 transition-all hover:bg-black/[0.04] hover:text-[#111111]"
           >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#111111] text-xs font-bold text-white">
-              DK
+            <Settings className="size-4 text-black/35" />
+            Settings
+          </Link>
+          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-black/55 transition-all hover:bg-black/[0.04] hover:text-[#111111]">
+            <HelpCircle className="size-4 text-black/35" />
+            Help
+          </button>
+        </div>
+
+        <div className="mt-2 border-t border-black/[0.06] pt-2">
+          <div className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#2A6948] text-xs font-bold text-white">
+              {initials || "?"}
             </div>
             <div className="min-w-0 flex-1 text-left">
-              <div className="truncate text-sm font-semibold text-[#111111]">David Kasompe</div>
-              <div className="truncate text-xs text-black/40">david@example.com</div>
+              <div className="truncate text-sm font-semibold text-[#111111]">{userName}</div>
+              <div className="truncate text-xs text-black/35">{userEmail}</div>
             </div>
-            <ChevronUp className="size-4 shrink-0 text-black/30" />
-          </Link>
+            <button
+              onClick={() => signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
+              className="rounded-lg p-1.5 text-black/25 transition-colors hover:bg-black/[0.05] hover:text-black/60"
+              title="Sign out"
+            >
+              <LogOut className="size-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </aside>
