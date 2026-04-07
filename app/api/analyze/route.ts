@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       model:     getGroqModel(),
       system:    ANALYSIS_SYSTEM_PROMPT,
       prompt:    stackTrace.slice(0, 12_000), // guard against huge traces
-      maxTokens: 8_000,
+      maxTokens: 2_000,
       abortSignal: AbortSignal.timeout(45_000),
     });
 

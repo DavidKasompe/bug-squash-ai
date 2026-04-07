@@ -242,7 +242,7 @@ export async function POST(req: Request) {
         model:       getGroqModel(),
         system:      systemPrompt,
         prompt:      userPrompt,
-        maxTokens:   8_000,
+        maxTokens:   3_000,
         abortSignal: AbortSignal.timeout(45_000),
       });
       const parsedCommitAnalysis = parseCommitAnalysisResponse(text);
@@ -316,7 +316,7 @@ export async function POST(req: Request) {
       model:       getGroqModel(),
       system:      systemPrompt,
       messages:    [{ role: "user", content: userPrompt }],
-      maxTokens:   8_000,
+      maxTokens:   2_000,
       abortSignal: AbortSignal.timeout(45_000),
       onFinish: async ({ text }) => {
         const parsed = parseAnalysisResponse(text);

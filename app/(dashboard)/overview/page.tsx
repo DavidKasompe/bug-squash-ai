@@ -1260,7 +1260,7 @@ export default function OverviewPage() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                  if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
                     formRef.current?.requestSubmit();
                   }
@@ -1282,7 +1282,7 @@ export default function OverviewPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-black/25 font-mono hidden sm:block">⌘↵</span>
+                  <span className="text-[10px] text-black/25 font-mono hidden sm:block">↵ send · ⇧↵ newline</span>
                   <button type="submit" disabled={!input.trim() || isLoading}
                     className="w-8 h-8 bg-[#2A6948] hover:bg-[#1E4A31] disabled:opacity-30 rounded-xl flex items-center justify-center transition-colors shadow-sm shadow-[#2A6948]/20">
                     {isLoading ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" /> : <Send className="w-3.5 h-3.5 text-white" />}
